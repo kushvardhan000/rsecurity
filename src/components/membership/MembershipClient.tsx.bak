@@ -1,0 +1,333 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { SectionHeader } from "../ui/SectionHeader";
+import { useLenis } from "@/src/lib/lenis";
+import { cn } from "@/src/lib/cn";
+import { DragMarquee } from "@/src/components/ui/DragMarquee";
+
+export interface MembershipLogoData {
+  id: string;
+  caption: string;
+  image: string;
+}
+
+export interface MembershipData {
+  id: string;
+  name: string;
+  type: string;
+  slug: string;
+  image: string;
+  width?: number;
+  height?: number;
+}
+
+interface MembershipClientProps {
+  memberships: MembershipData[];
+  logos?: MembershipLogoData[];
+}
+
+function LocalLightbox({
+  items,
+  index,
+  onClose,
+  onNavigate,
+}: {
+  items: MembershipData[];
+  index: number | null;
+  onClose: () => void;
+  onNavigate: (dir: number) => void;
+}) {
+  const open = index !== null;
+  const item = open ? items[index] : null;
+  const lenis = useLenis();
+  const [zoomed, setZoomed] = useState(false);
+  const boundsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const prevOver = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    lenis?.stop();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") onNavigate(-1);
+      if (e.key === "ArrowRight") onNavigate(1);
+    };
+    window.addEventListener("keydown", onKey);
+
+    return () => {
+      document.body.style.overflow = prevOver;
+      lenis?.start();
+      window.removeEventListener("keydown", onKey);
+      setZoomed(false);
+    };
+  }, [open, lenis, onClose, onNavigate]);
+
+  return (
+    <AnimatePresence>
+      {open && item && (
+        <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           exit={{ opacity: 0 }}
+           transition={{ duration: 0.3 }}
+           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-maroon-950/90 backdrop-blur-sm touch-none"
+           onClick={onClose}
+        >
+          <div className="absolute top-0 inset-x-0 p-4 sm:p-6 flex items-center justify-between pointer-events-none z-20 text-white">
+            <div className="pointer-events-auto font-mono text-sm tracking-widest text-white/70">
+              {String(index + 1).padStart(2, "0")} / {String(items.length).padStart(2, "0")}
+            </div>
+            <button
+               onClick={(e) => { e.stopPropagation(); onClose(); }}
+               className="pointer-events-auto flex items-center justify-center h-[44px] px-5 rounded-full bg-white/10 hover:bg-white/20 transition-colors tracking-widest text-sm font-medium uppercase"
+               aria-label="Close"
+            >
+               Close ✕
+            </button>
+          </div>
+
+          <div
+             ref={boundsRef}
+             className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none px-[4vw] py-[8dvh]"
+          >
+             <motion.div
+                drag={zoomed ? true : "x"}
+                dragConstraints={zoomed ? boundsRef : { left: 0, right: 0 }}
+                dragElastic={zoomed ? 0.1 : 0.8}
+                onDragEnd={(e, info) => {
+                   if (!zoomed) {
+                     if (info.offset.x < -50) onNavigate(1);
+                     else if (info.offset.x > 50) onNavigate(-1);
+                   }
+                }}
+                onClick={(e) => {
+                   e.stopPropagation();
+                   setZoomed(!zoomed);
+                }}
+                className={cn("relative pointer-events-auto", zoomed ? "cursor-zoom-out" : "cursor-zoom-in")}
+                style={{
+                   width: item.width,
+                   height: item.height,
+                   maxWidth: "92vw",
+                   maxHeight: "84dvh",
+                }}
+                animate={{ scale: zoomed ? 2 : 1 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+             >
+                <Image src={item.image} alt={item.name} fill className="object-contain" sizes="100vw" unoptimized={false} />
+             </motion.div>
+          </div>
+
+          <div className="absolute bottom-0 inset-x-0 p-6 sm:p-8 pointer-events-none flex flex-col items-center bg-gradient-to-t from-maroon-950/80 to-transparent z-10 text-center text-white">
+            <h3 className="font-serif text-lg sm:text-xl font-medium tracking-wide drop-shadow-md">{item.name}</h3>
+            {item.type && <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-white/70 font-bold mt-2 drop-shadow-sm">{item.type}</p>}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+export function MembershipClient({ memberships, logos = [] }: MembershipClientProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  const [progress, setProgress] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [logoFits, setLogoFits] = useState(false);
+  const logoContainerRef = useRef<HTMLDivElement>(null);
+  const logoContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!logos || logos.length === 0) return;
+    const checkFit = () => {
+      if (logoContainerRef.current && logoContentRef.current) {
+        setLogoFits(logoContentRef.current.scrollWidth <= logoContainerRef.current.clientWidth + 1);
+      }
+    };
+    const observer = new ResizeObserver(checkFit);
+    if (logoContainerRef.current) observer.observe(logoContainerRef.current);
+    if (logoContentRef.current) observer.observe(logoContentRef.current);
+    checkFit();
+    return () => observer.disconnect();
+  }, [logos]);
+
+  const handleImageError = (id: string) => {
+    setFailedImages((prev) => ({ ...prev, [id]: true }));
+  };
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const max = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+    setProgress(max > 0 ? scrollRef.current.scrollLeft / max : 0);
+  };
+
+  const scrollByAmount = (direction: number) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction * 400, behavior: "smooth" });
+    }
+  };
+
+  const navigateLightbox = (dir: number) => {
+    if (openIndex === null) return;
+    setOpenIndex((openIndex + dir + memberships.length) % memberships.length);
+  };
+
+  const renderLogos = () => {
+    if (!logos || logos.length === 0) return null;
+
+    const cells = logos.map((l) => (
+      <div
+        key={l.id}
+        className="w-[168px] sm:w-[180px] shrink-0 min-h-[110px] flex flex-col items-center gap-3 justify-center p-3 border-r border-grey-100 bg-white"
+        title={l.caption}
+      >
+        <div className="relative w-[85%] h-[56px] flex items-center justify-center">
+          <Image src={l.image} alt={l.caption} fill className="object-contain" sizes="180px" />
+        </div>
+        <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-text-dark font-bold text-center leading-none px-1 ">{l.caption}</span>
+      </div>
+    ));
+
+    return (
+      <div className="w-[105%] -ml-[2.5%] mt-12 sm:mt-16 border-y border-grey-100 bg-grey-100 relative" ref={logoContainerRef}>
+        <div className="absolute top-0 left-0 h-0 overflow-hidden invisible flex pointer-events-none p-0 m-0" ref={logoContentRef} aria-hidden="true">
+          {logos.map(l => (
+             <div key={l.id} className="w-[168px] sm:w-[180px] shrink-0" />
+          ))}
+        </div>
+
+        {logoFits ? (
+          <div className="w-full h-full flex items-center justify-center bg-white border-l border-grey-100">
+            <div className="flex">
+              {cells}
+            </div>
+          </div>
+        ) : (
+          <div className="w-full bg-white relative">
+            <DragMarquee speed={30} gap={0} className="w-full min-h-[110px]" fade pauseOnHover>
+              {cells}
+            </DragMarquee>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <section id="membership" data-tone="light" className="bg-blush pt-[var(--section-y)] pb-0 flex flex-col justify-center overflow-x-clip">
+      <div className="mx-auto w-full max-w-[1240px] px-[clamp(16px,4vw,48px)] flex flex-col">
+        <div className="w-full flex flex-col">
+          <SectionHeader
+            eyebrow="Credentials"
+            title="Memberships &"
+            accentWord="affiliations"
+            className="mb-4 sm:mb-6"
+          />
+          <p className="text-grey-700 text-[15px] md:text-[16px] font-medium leading-[1.65] max-w-lg mb-4 sm:mb-8">
+            Recognised member of leading security, detective and industry bodies.
+          </p>
+        </div>
+      </div>
+
+      <div className="relative mt-[clamp(32px,4vw,56px)] max-w-[1240px] mx-auto w-full">
+        <div className="absolute inset-y-0 left-0 w-8 md:w-16 bg-gradient-to-r from-blush to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-8 md:w-16 bg-gradient-to-l from-blush to-transparent z-10 pointer-events-none" />
+
+        <div className="hidden md:flex absolute top-[clamp(120px,17vw,170px)] mt-2 -translate-y-1/2 left-4 right-4 justify-between pointer-events-none z-20">
+          <button
+            onClick={() => scrollByAmount(-1)}
+            className="pointer-events-auto h-11 w-11 grid place-items-center rounded-full bg-crimson text-white  hover:scale-105 active:scale-95 transition-transform"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => scrollByAmount(1)}
+            className="pointer-events-auto h-11 w-11 grid place-items-center rounded-full bg-crimson text-white  hover:scale-105 active:scale-95 transition-transform"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex overflow-x-auto snap-x snap-mandatory gap-6 px-[clamp(16px,4vw,48px)] pb-6 pt-2 hide-scrollbar focus-visible:outline-none"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {memberships.map((m, i) => (
+            <div key={m.id} className="snap-center shrink-0 flex flex-col group/card items-center">
+              <div
+                onClick={() => setOpenIndex(i)}
+                className="cursor-pointer bg-white border border-grey-100 p-[8px] h-[clamp(240px,34vw,340px)] transition-transform duration-300 md:group-hover/card:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 ring-maroon-950/20"
+                role="button"
+                tabIndex={0}
+                aria-label={`View ${m.name} certificate`}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenIndex(i); } }}
+              >
+                <div
+                  className="relative h-full border border-grey-100 bg-paper"
+                  style={{ aspectRatio: m.width && m.height ? `${m.width}/${m.height}` : "3/4" }}
+                >
+                  {failedImages[m.id] ? (
+                    <div className="w-full h-full flex items-center justify-center p-4">
+                      <span className="text-center font-serif text-[clamp(19px,2.5vw,22px)] leading-[1.25] font-medium text-maroon-900/60">{m.name}</span>
+                    </div>
+                  ) : (
+                    <Image
+                      src={m.image}
+                      alt={m.name}
+                      fill
+                      className="object-contain"
+                      sizes="(max-height: 500px) 240px, 340px"
+                      onError={() => handleImageError(m.id)}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 text-center px-1 w-full max-w-[260px]">
+                <h3 className="font-serif text-[clamp(19px,2.5vw,22px)] leading-[1.25] font-medium text-maroon-900 leading-snug">{m.name}</h3>
+                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-crimson mt-1.5">{m.type}</p>
+              </div>
+            </div>
+          ))}
+
+          <div className="w-[1px] shrink-0" aria-hidden="true" />
+        </div>
+      </div>
+
+      <div className="mt-2 flex md:hidden flex-col items-center px-5 max-w-[200px] mx-auto w-full mb-8">
+        <div className="w-full flex items-center justify-center gap-4">
+          <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-crimson font-bold shrink-0">Swipe</div>
+          <div className="relative flex-1 h-[2px] bg-maroon-950/5 rounded-full overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 w-full bg-crimson rounded-full origin-left transition-transform duration-150" style={{ transform: `scaleX(${Math.max(0.1, progress)})` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {renderLogos()}
+
+      <LocalLightbox
+        items={memberships}
+        index={openIndex}
+        onClose={() => setOpenIndex(null)}
+        onNavigate={navigateLightbox}
+      />
+      <style dangerouslySetInnerHTML={{__html: `
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+      `}} />
+    </section>
+  );
+}

@@ -1,26 +1,443 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* ── Brand red (accent, used sparingly) ───────────────── */
+  --color-accent: #A6192E;
+  --color-accent-hover: #86111F;
+  --color-accent-deep: #5A0F1C;
+
+  /* ── Neutrals ─────────────────────────────────────────── */
+  --color-white: #ffffff;
+  --color-offwhite: #f6f6f7;
+  --color-grey-soft: #e8e8eb;
+  --color-grey-mid: #8a8a93;
+  --color-grey-dark: #2a2a30;
+  --color-maroon-950: #2a060c;
+  --color-maroon-900: #3d0a12;
+  --color-maroon-800: #5a0f1c;
+  --color-maroon-700: #7a1426;
+  --color-crimson: #A6192E;
+  --color-crimson-dark: #86111F;
+  --color-rose: #F2B8BF;
+  --color-paper: #FBFAF8;
+  --color-grey-100: #E3E1DE;
+  --color-grey-500: #8C8984;
+  --color-grey-700: #5B5955;
+  --color-text-dark: #2B2A28;
+
+  --color-blush: #F6E9EB;
+
+  /* ── Typography ───────────────────────────────────────── */
+  --font-display: var(--font-display-serif);
+  --font-sans: var(--font-sans-grotesk);
+
+  /* ── Radii: sharp, classic ────────────────────────────── */
+  --radius-sharp: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  /* ── Shadows ──────────────────────────────────────────── */
+  --shadow-crisp: 0 1px 2px rgb(18 18 21 / 0.08);
+  --shadow-soft: 0 8px 32px rgb(18 18 21 / 0.12);
+  --shadow-lift: 0 16px 48px rgb(18 18 21 / 0.18);
+
+  /* ── Motion ───────────────────────────────────────────── */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Section spacing ───────────────────────────────────── */
+  --section-y: clamp(64px, 9vw, 128px);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-accent) var(--color-grey-soft);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-white);
+    color: var(--color-grey-dark);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-white);
+  }
+
+  /* Thin grey scrollbar, red thumb */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-grey-soft);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-accent);
+    border: 2px solid var(--color-grey-soft);
+    border-radius: var(--radius-sharp);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent-hover);
+  }
+
+  /* Red focus ring everywhere */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  /* Lenis smooth-scroll recommended styles */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Custom utilities ─────────────────────────────────────── */
+
+@utility grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+@utility eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-grey-mid);
+
+  &::before {
+    content: "";
+    display: block;
+    width: 2rem;
+    height: 1px;
+    background-color: var(--color-accent);
+    flex-shrink: 0;
+  }
+}
+
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+}
+
+@utility italic-accent {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+@utility text-outline {
+  -webkit-text-stroke: 1.5px var(--color-grey-mid);
+  color: transparent;
+}
+
+/* ── Marquee keyframes (pure CSS, GPU-friendly) ───────────── */
+
+@keyframes marquee-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-x-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@utility marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-x var(--marquee-duration, 40s) linear infinite;
+  will-change: transform;
+}
+
+@utility marquee-track-reverse {
+  display: flex;
+  width: max-content;
+  animation: marquee-x-reverse var(--marquee-duration, 40s) linear infinite;
+  will-change: transform;
+}
+
+@utility marquee-paused {
+  animation-play-state: paused;
+}
+
+/* Pause marquees for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .marquee-track-reverse,
+  .scroll-cue-line,
+  .rotate-slow {
+    animation: none;
+  }
+}
+
+/* Vignette for dark sections */
+@utility vignette {
+  position: relative;
+
+  &::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      120% 90% at 50% 10%,
+      transparent 55%,
+      rgb(18 18 21 / 0.45) 100%
+    );
+  }
+}
+
+/* ── Hero helpers ─────────────────────────────────── */
+
+/* bottom-heavy overlay so hero text always passes contrast */
+@utility hero-overlay {
+  background: linear-gradient(
+    to top,
+    var(--color-maroon-950) 4%,
+    color-mix(in srgb, var(--color-maroon-950) 78%, transparent) 38%,
+    color-mix(in srgb, var(--color-maroon-950) 30%, transparent) 68%,
+    color-mix(in srgb, var(--color-maroon-950) 55%, transparent) 100%
+  );
+}
+
+/* dark-grey gradient fallbacks until real hero photos arrive */
+@utility hero-fallback-1 {
+  background: radial-gradient(
+    130% 100% at 15% 0%,
+    var(--color-grey-dark),
+    var(--color-maroon-950) 72%
+  );
+}
+@utility hero-fallback-2 {
+  background: radial-gradient(
+    130% 100% at 85% 10%,
+    color-mix(in srgb, var(--color-grey-dark) 55%, var(--color-maroon-950)),
+    var(--color-maroon-950) 75%
+  );
+}
+@utility hero-fallback-3 {
+  background: radial-gradient(
+    120% 110% at 50% 0%,
+    color-mix(in srgb, var(--color-accent-deep) 40%, var(--color-grey-dark)),
+    var(--color-maroon-950) 78%
+  );
+}
+@utility hero-fallback-4 {
+  background: radial-gradient(
+    130% 100% at 25% 20%,
+    color-mix(in srgb, var(--color-grey-dark) 40%, var(--color-maroon-950)),
+    var(--color-maroon-950) 70%
+  );
+}
+@utility hero-fallback-5 {
+  background: radial-gradient(
+    120% 110% at 75% 15%,
+    color-mix(in srgb, var(--color-accent-deep) 30%, var(--color-grey-dark)),
+    var(--color-maroon-950) 76%
+  );
+}
+
+/* "Scroll" cue line */
+@keyframes scroll-cue {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+
+@utility scroll-cue-line {
+  animation: scroll-cue 2.4s var(--ease-premium) infinite;
+}
+
+/* ── About helpers ────────────────────────────── */
+
+/* subtle grey dot grid */
+@utility bg-dots {
+  background-image: radial-gradient(
+    var(--color-grey-soft) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* slow rotation for the circular text badge */
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility rotate-slow {
+  animation: rotate-slow 24s linear infinite;
+}
+
+/* about photo fallbacks until real photos arrive */
+@utility about-fallback-portrait {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--color-grey-dark) 80%, var(--color-maroon-950)),
+    var(--color-maroon-950) 75%
+  );
+}
+@utility about-fallback-landscape {
+  background: linear-gradient(
+    200deg,
+    color-mix(in srgb, var(--color-grey-dark) 60%, var(--color-maroon-950)),
+    color-mix(in srgb, var(--color-accent-deep) 25%, var(--color-maroon-950)) 80%
+  );
+}
+
+/* ── Services helpers ─────────────────── */
+
+/* faint red radial glow for dark sections */
+@utility glow-red {
+  background: radial-gradient(
+    60% 60% at 85% 10%,
+    color-mix(in srgb, var(--color-accent) 14%, transparent),
+    transparent 70%
+  );
+}
+
+/* service image fallbacks (cycled by index) */
+@utility service-fallback-1 {
+  background: radial-gradient(
+    120% 100% at 20% 0%,
+    color-mix(in srgb, var(--color-grey-dark) 70%, var(--color-maroon-950)),
+    var(--color-maroon-950) 75%
+  );
+}
+@utility service-fallback-2 {
+  background: radial-gradient(
+    120% 100% at 80% 0%,
+    color-mix(in srgb, var(--color-accent-deep) 35%, var(--color-grey-dark)),
+    var(--color-maroon-950) 78%
+  );
+}
+@utility service-fallback-3 {
+  background: radial-gradient(
+    120% 100% at 50% 10%,
+    color-mix(in srgb, var(--color-grey-dark) 45%, var(--color-maroon-950)),
+    var(--color-maroon-950) 72%
+  );
+}
+
+/* events section: white → soft grey gradient */
+@utility events-bg {
+  background: linear-gradient(
+    to bottom,
+    var(--color-white),
+    var(--color-offwhite)
+  );
+}
+
+/* soft red spotlight for dark sections */
+@utility spotlight-red {
+  background: radial-gradient(
+    55% 55% at 50% 45%,
+    color-mix(in srgb, var(--color-accent) 13%, transparent),
+    transparent 70%
+  );
+}
+
+@utility bg-maroon-theme {
+  background: linear-gradient(160deg, var(--color-maroon-800) 0%, var(--color-maroon-950) 100%);
+}
+
+[data-tone="dark"] {
+  --color-accent: var(--color-rose);
+}
+
+/* ── Preloader Core ───────────────────────────────────── */
+html:not([data-preloaded="1"]):not([data-ready="1"]) {
+  overflow: hidden;
+}
+
+html:not([data-preloaded="1"]):not([data-ready="1"]) main {
+  visibility: hidden;
+}
+
+html[data-preloaded="1"] #preloader {
+  display: none !important;
+}
+
+#preloader {
+  transition: clip-path 0.6s cubic-bezier(0.8, 0, 0.2, 1);
+  clip-path: circle(150% at 50% 50%);
+}
+
+#preloader.preloader-exit {
+  clip-path: circle(0% at 50% 50%);
+}
+
+@keyframes preloader-failsafe {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+html:not([data-preloaded="1"]):not([data-ready="1"]) #preloader {
+  animation: preloader-failsafe 0.6s ease forwards;
+  animation-delay: 4s;
+}
+
+@media (prefers-reduced-motion) {
+  #preloader, #preloader.preloader-exit {
+    clip-path: none;
+  }
+  #preloader {
+    transition: opacity 0.6s ease;
+  }
+  #preloader.preloader-exit {
+    opacity: 0;
+  }
 }

@@ -1,0 +1,103 @@
+
+> rsecurity@0.1.0 lint
+> eslint
+
+
+D:\rsecurity\src\components\Navbar.tsx
+  180:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+
+D:\rsecurity\src\components\Preloader.tsx
+   15:7   warning  'prefersReduced' is assigned a value but never used                                                 @typescript-eslint/no-unused-vars
+  132:13  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+
+D:\rsecurity\src\components\awards\AwardsShowcase.tsx
+   7:10  warning  'AWARDS' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  12:7   warning  'DRAG_THRESHOLD' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  14:7   warning  'SCROLL_DEBOUNCE' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  20:10  warning  'lightboxIndex' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  20:25  warning  'setLightboxIndex' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  27:45  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\rsecurity\src\components\awards\AwardsShowcase.tsx:27:45
+  25 |   const autoplayRef = useRef<number | null>(null);
+  26 |   const rafRef = useRef<number | null>(null);
+> 27 |   const lastInteractionRef = useRef<number>(Date.now());
+     |                                             ^^^^^^^^^^ Cannot call impure function
+  28 |   const dragStartRef = useRef<{ x: number; scrollLeft: number } | null>(null);
+  29 |
+  30 |   const lightboxItems: LightboxItem[] = useMemo(() => awards                                                                                                                                                                                 react-hooks/purity
+  39:17  warning  'close' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+  42:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\rsecurity\src\components\awards\AwardsShowcase.tsx:42:5
+  40 |
+  41 |   useEffect(() => {
+> 42 |     setMounted(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  43 |   }, []);
+  44 |
+  45 |   // Compute active index based on card nearest to rail center  react-hooks/set-state-in-effect
+
+D:\rsecurity\src\components\cta\CTA.tsx
+    3:28  warning  'useEffect' is defined but never used                            @typescript-eslint/no-unused-vars
+    5:8   warning  'Image' is defined but never used                                @typescript-eslint/no-unused-vars
+    8:10  warning  'FEATURED_SERVICES' is defined but never used                    @typescript-eslint/no-unused-vars
+   11:10  warning  'MagneticButton' is defined but never used                       @typescript-eslint/no-unused-vars
+  132:24  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  149:47  warning  'i' is defined but never used                                    @typescript-eslint/no-unused-vars
+  208:25  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+D:\rsecurity\src\components\events\EventsGallery.tsx
+    8:26  warning  'EVENT_STATS' is defined but never used                @typescript-eslint/no-unused-vars
+   62:3   warning  'index' is defined but never used                      @typescript-eslint/no-unused-vars
+   72:10  warning  'showReadMore' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  334:10  warning  'pausedByTouch' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  337:9   warning  'handleTouchStart' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\rsecurity\src\components\services\Services.tsx
+   14:10  warning  'MagneticButton' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   17:7   warning  'EASE' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   30:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\rsecurity\src\components\services\Services.tsx:30:5
+  28 |
+  29 |   useEffect(() => {
+> 30 |     setMounted(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |   }, []);
+  32 |
+  33 |   const goTo = useCallback((dir: 1 | -1) => {  react-hooks/set-state-in-effect
+  120:13  warning  The attribute aria-selected is not supported by the role tabpanel                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               jsx-a11y/role-supports-aria-props
+  184:15  warning  The attribute aria-selected is not supported by the role tabpanel                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               jsx-a11y/role-supports-aria-props
+
+D:\rsecurity\src\components\ui\DragMarquee.tsx
+  189:17  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\rsecurity\src\components\ui\DragMarquee.tsx:189:17
+  187 |
+  188 |       const deltaX = e.clientX - s.lastPoint;
+> 189 |       const t = Date.now();
+      |                 ^^^^^^^^^^ Cannot call impure function
+  190 |       const dt = Math.max((t - s.lastTime) / 1000, 0.001);
+  191 |       s.velocity = deltaX / dt;
+  192 |  react-hooks/purity
+
+✖ 29 problems (6 errors, 23 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
