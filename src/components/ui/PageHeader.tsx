@@ -23,7 +23,7 @@ export function PageHeader({ breadcrumbs, title, subtitle }: PageHeaderProps) {
                 Home
               </Link>
             </li>
-            {breadcrumbs.map((crumb, index) => (
+            {breadcrumbs.map((crumb) => (
               <li key={crumb.label} className="flex items-center gap-2">
                 <span className="text-white/30" aria-hidden="true">/</span>
                 {crumb.href ? (

@@ -6,7 +6,6 @@ import { GALLERY, type GalleryItem } from "@/src/data/gallery";
 import { DragMarquee } from "../ui/DragMarquee";
 import { SectionHeader } from "../ui/SectionHeader";
 import { useLightbox } from "../ui/Lightbox";
-import { cn } from "@/src/lib/cn";
 
 export function Gallery() {
   const row1 = GALLERY.slice(0, 9);

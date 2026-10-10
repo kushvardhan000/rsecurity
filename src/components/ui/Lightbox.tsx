@@ -176,7 +176,7 @@ export function Lightbox({ items, index, onNavigate, onClose }: LightboxProps) {
                         alt={item.imageAlt}
                         fill
                         className="object-contain"
-                        sizes="100vw"
+                        sizes="100%"
                         priority
                       />
                    </motion.div>

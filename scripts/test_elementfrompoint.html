@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body style="height: 2000px; background: red;" data-tone="dark">
+  <!-- header -->
+  <header style="position: fixed; inset: 0 0 auto 0; height: 80px; z-index: 50; pointer-events: auto;">
+      <div style="width: 100px; height: 80px; pointer-events: auto; background: blue;"></div>
+      <!-- center is empty, but header block is pointer-events:auto -->
+  </header>
+  <!-- stats -->
+  <section style="position: relative; width: 100%; height: 500px; background: white;" id="stats" data-tone="light">
+  </section>
+  <script>
+     setTimeout(() => {
+        const el = document.elementFromPoint(window.innerWidth / 2, 40);
+        console.log("Hits:", el.tagName, el.id, el.closest('[data-tone]')?.getAttribute('data-tone'));
+     }, 100);
+  </script>
+</body>
+</html>

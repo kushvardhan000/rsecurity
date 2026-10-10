@@ -24,21 +24,4 @@ export const CLIENTS: ClientData[] = [
   { name: "Tata Steel", slug: "tatasteel", placeholder: false, logoUrl: "/clients/tatasteel.svg" },
   { name: "Thriveni", slug: "thriveni", placeholder: false, logoUrl: "/clients/thriveni.svg" },
 
-  // SAMPLE PLACEHOLDERS
-  { name: "Tata", slug: "tata", placeholder: true },
-  { name: "Airtel", slug: "airtel", placeholder: true },
-  { name: "Jio", slug: "jio", placeholder: true },
-  { name: "Paytm", slug: "paytm", placeholder: true },
-  { name: "Zomato", slug: "zomato", placeholder: true },
-  { name: "Swiggy", slug: "swiggy", placeholder: true },
-  { name: "Mahindra", slug: "mahindra", placeholder: true },
-  { name: "Infosys", slug: "infosys", placeholder: true },
-  { name: "Wipro", slug: "wipro", placeholder: true },
-  { name: "TCS", slug: "tcs", placeholder: true },
-  { name: "HCL", slug: "hcl", placeholder: true },
-  { name: "Samsung", slug: "samsung", placeholder: true },
-  { name: "Hyundai", slug: "hyundai", placeholder: true },
-  { name: "Google", slug: "google", placeholder: true },
-  { name: "Microsoft", slug: "microsoft", placeholder: true },
-  { name: "Apple", slug: "apple", placeholder: true },
-];
+  ];

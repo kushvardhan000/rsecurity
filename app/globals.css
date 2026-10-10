@@ -55,6 +55,15 @@
     scrollbar-color: var(--color-accent) var(--color-grey-soft);
   }
 
+  :root {
+    --nav-h: 68px;
+  }
+  @media (min-width: 1024px) {
+    :root {
+      --nav-h: 80px;
+    }
+  }
+
   body {
     background-color: var(--color-white);
     color: var(--color-grey-dark);
@@ -440,4 +449,32 @@ html:not([data-preloaded="1"]):not([data-ready="1"]) #preloader {
   #preloader.preloader-exit {
     opacity: 0;
   }
+}
+
+@layer base {
+  html, body {
+    overflow-x: clip;
+  }
+
+  .flex > * {
+    min-width: 0;
+  }
+}
+
+@layer utilities {
+  .hero-image {
+    --current-focal: var(--focal-desktop);
+  }
+  @media (max-width: 639px) {
+    .hero-image {
+      --current-focal: var(--focal-mobile);
+    }
+  }
+}
+
+html:not([data-preloaded="1"]):not([data-ready="1"]) header {
+  opacity: 0 !important;
+  transform: translateY(-20px) !important;
+  pointer-events: none !important;
+  visibility: hidden;
 }

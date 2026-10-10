@@ -1,0 +1,169 @@
+D:\rsecurity\app\about\page.tsx:
+  Line 38: @next/next/no-img-element (1)
+
+D:\rsecurity\app\not-found.tsx:
+  Line 20: react/no-unescaped-entities (2)
+  Line 20: react/no-unescaped-entities (2)
+  Line 21: react/no-unescaped-entities (2)
+
+D:\rsecurity\app\robots.ts:
+  Line 2: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\app\services\[slug]\page.tsx:
+  Line 3: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\app\services\page.tsx:
+  Line 3: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\app\sitemap.ts:
+  Line 2: @typescript-eslint/no-unused-vars (1)
+  Line 5: @typescript-eslint/no-unused-vars (1)
+  Line 6: @typescript-eslint/no-unused-vars (1)
+  Line 7: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\fix-nav-final.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\fix-nav-h.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\fix-nav.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\fix-navbar.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\fix-no-anim.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\fix-socials.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\fix_navbar_tone.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\fix_top_logo.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\rewrite-nav.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\rewrite-nav2.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\scripts\check-logos.mjs:
+  Line 8: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\scripts\fix_clients_marquee.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\scripts\fix_cta_header.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\scripts\panel-audit.mjs:
+  Line 2: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\scripts\update_awards.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\scripts\update_clients.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+  Line 15: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\scripts\update_cta.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\scripts\update_events.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\scripts\update_gallery.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\scripts\update_layout_css.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\scripts\update_services.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\scripts\update_stats.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\src\components\Navbar.tsx:
+  Line 3: @typescript-eslint/no-unused-vars (1)
+  Line 10: @typescript-eslint/no-unused-vars (1)
+  Line 14: @typescript-eslint/no-unused-vars (1)
+  Line 129: @typescript-eslint/no-unused-vars (1)
+  Line 184: react-hooks/set-state-in-effect (2)
+  Line 210: react-hooks/set-state-in-effect (2)
+  Line 322: @next/next/no-img-element (1)
+  Line 330: @next/next/no-img-element (1)
+  Line 461: @next/next/no-img-element (1)
+  Line 472: @next/next/no-img-element (1)
+  Line 613: @next/next/no-img-element (1)
+
+D:\rsecurity\src\components\awards\Awards.tsx:
+  Line 167: prefer-const (2)
+
+D:\rsecurity\src\components\careers\CareersClient.tsx:
+  Line 153: react/no-unescaped-entities (2)
+
+D:\rsecurity\src\components\gallery\Gallery.tsx:
+  Line 9: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\src\components\hero\Stats.tsx:
+  Line 258: prefer-const (2)
+
+D:\rsecurity\src\components\membership\MembershipClient.tsx:
+  Line 7: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\src\components\services\Services.tsx:
+  Line 9: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\src\components\ui\PageHeader.tsx:
+  Line 26: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\src\lib\lenis.ts:
+  Line 155: react-hooks/refs (2)
+  Line 156: react-hooks/exhaustive-deps (1)
+  Line 159: react-hooks/refs (2)
+  Line 159: react-hooks/refs (2)
+
+D:\rsecurity\src\lib\preloader.ts:
+  Line 33: react-hooks/set-state-in-effect (2)
+
+D:\rsecurity\test-all.spec.ts:
+  Line 1: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\test-home.spec.ts:
+  Line 1: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\test-nav-about-real.spec.ts:
+  Line 1: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\test-nav-debug.spec.ts:
+  Line 1: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\test-nav-routes.spec.ts:
+  Line 1: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\test-nav.spec.ts:
+  Line 1: @typescript-eslint/no-unused-vars (1)
+  Line 10: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\test-tailwind.tsx:
+  Line 1: @typescript-eslint/no-unused-vars (1)
+
+D:\rsecurity\update-awards.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\update-footer.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\update_navbar.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\update_navbar_3.js:
+  Line 1: @typescript-eslint/no-require-imports (2)
+
+D:\rsecurity\update_stats2.js:
+  Line 1: @typescript-eslint/no-require-imports (2)

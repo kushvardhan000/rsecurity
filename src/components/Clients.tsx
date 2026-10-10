@@ -9,17 +9,6 @@ import { DragMarquee } from "@/src/components/ui/DragMarquee";
 import { cn } from "@/src/lib/cn";
 
 export function Clients() {
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "production") {
-      const hasPlaceholders = CLIENTS.some(c => c.placeholder);
-      if (hasPlaceholders) {
-        console.warn(
-          "[Dev-Only Warning]: The clients section is currently using sample placeholder logos (from simple-icons). " +
-          "These global brands are NOT actual clients. Replace them with approved official logos before final launch."
-        );
-      }
-    }
-  }, []);
 
   // Prepare differently shifted rows so repeats never perfectly align vertically
   const ROW_1 = [...CLIENTS];

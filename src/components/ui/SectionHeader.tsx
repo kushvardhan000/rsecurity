@@ -2,7 +2,7 @@ import { cn } from "@/src/lib/cn";
 
 export interface SectionHeaderProps {
   hideEyebrowSquare?: boolean;
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   accentWord: string;
   titleSuffix?: string;
@@ -32,6 +32,7 @@ export function SectionHeader({
     >
       <div className="flex flex-col gap-4">
         {/* Eyebrow with small crimson square */}
+        {eyebrow && (
         <div
           className={cn(
             "inline-flex items-center gap-3 text-[13px] font-semibold tracking-[0.28em] uppercase",
@@ -41,6 +42,7 @@ export function SectionHeader({
           {!hideEyebrowSquare && <div className={cn("w-1.5 h-1.5 shrink-0", dark ? "bg-rose-400" : "bg-[#A6192E]")} />}
           {eyebrow}
         </div>
+        )}
 
         {/* H2 in Newsreader font (displaySerif) with one italic accent word */}
         <h2

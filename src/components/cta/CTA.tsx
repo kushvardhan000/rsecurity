@@ -75,8 +75,22 @@ export function CTA() {
     setErrors({});
     setStatus("submitting");
 
-    // Simulated submit API request
-    await new Promise((r) => setTimeout(r, 1200));
+    
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, type: "cta" })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to submit");
+    } catch (err) {
+      console.error(err);
+      setStatus("error");
+      setErrors({ message: err instanceof Error ? err.message : "An error occurred" });
+      return;
+    }
+    
 
     setStatus("success");
     setFormData(initialFormData);
@@ -240,14 +254,14 @@ export function CTA() {
                   </span>
                 </motion.div>
               ) : (
-                <motion.form
+                <motion.div
                   key="form"
-                  onSubmit={handleSubmit}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex flex-col gap-4 sm:gap-5"
+                  className="w-full"
                 >
+                  <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="name" className="block text-[11px] font-bold tracking-widest uppercase text-neutral-700 mb-1.5">
@@ -354,7 +368,7 @@ export function CTA() {
                       "Request a Call Back"
                     )}
                   </button>
-                </motion.form>
+                </form></motion.div>
               )}
             </AnimatePresence>
           </div>

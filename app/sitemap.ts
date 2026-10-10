@@ -1,10 +1,6 @@
 import { MetadataRoute } from "next";
-import { SITE } from "@/src/data/site";
 import { FEATURED_SERVICES, ALSO_SERVICES } from "@/src/data/services";
 import { EVENTS } from "@/src/data/events";
-import { AWARDS } from "@/src/data/awards";
-import { GALLERY } from "@/src/data/gallery";
-import { CLIENTS } from "@/src/data/clients";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://rsecurity.in";

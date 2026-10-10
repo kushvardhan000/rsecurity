@@ -133,6 +133,7 @@ export function Hero() {
     <>
       <section
         id="home"
+        data-tone="dark"
         ref={heroRef}
         aria-label="Hero"
         className="relative flex flex-col justify-between h-[110svh] max-h-[110svh] w-full bg-[#0F0E0D] text-white overflow-hidden"
@@ -199,7 +200,7 @@ export function Hero() {
         </div>
 
         {/* 2. HERO CONTENT AREA */}
-        <div className="relative z-20 flex-1 flex flex-col justify-center max-w-[1400px] mx-auto w-full px-6 sm:px-10 lg:px-16 pt-24 sm:pt-28 lg:pt-32 pb-6 pointer-events-none">
+        <div className="relative z-20 flex-1 flex flex-col justify-center max-w-[1400px] mx-auto w-full px-6 sm:px-10 lg:px-16 pt-8 sm:pt-10 lg:pt-12 pb-6 pointer-events-none">
           <div className="w-full max-w-xl pointer-events-auto">
             {/* Optimized Headline */}
             <h1

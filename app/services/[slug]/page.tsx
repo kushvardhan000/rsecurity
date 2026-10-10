@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/src/components/ui/PageHeader";
-import { FEATURED_SERVICES, ALSO_SERVICES, type FeaturedService, type AlsoService } from "@/src/data/services";
+import { FEATURED_SERVICES, ALSO_SERVICES, type FeaturedService } from "@/src/data/services";
 import Image from "next/image";
 import Link from "next/link";
 

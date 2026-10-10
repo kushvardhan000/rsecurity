@@ -35,6 +35,7 @@ export default function AboutPage() {
                 </ul>
               </div>
               <div className="relative aspect-[4/5] lg:aspect-[3/4] rounded-sm overflow-hidden bg-[var(--color-grey-soft)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={ABOUT.images.landscape}
                   alt={ABOUT.images.landscapeAlt}

@@ -1,0 +1,29 @@
+          <svg
+            viewBox="0 0 1000 70"
+            className="w-full h-auto block select-none"
+            preserveAspectRatio="xMidYMax slice"
+          >
+            <defs>
+              <linearGradient id="wordmarkFloorSnap" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#630018" stopOpacity="0.28" />
+                <stop offset="60%" stopColor="#630018" stopOpacity="0.14" />
+                <stop offset="100%" stopColor="#630018" stopOpacity="0.04" />
+              </linearGradient>
+            </defs>
+            <text
+              x="50%"
+              y="68"
+              textAnchor="middle"
+              fill="url(#wordmarkFloorSnap)"
+              className="font-display uppercase tracking-[-0.03em]"
+              style={{
+                fontSize: "100px",
+                fontWeight: 900,
+                whiteSpace: "nowrap",
+              }}
+              textLength="980"
+              lengthAdjust="spacingAndGlyphs"
+            >
+              Ranchi.Security
+            </text>
+          </svg>

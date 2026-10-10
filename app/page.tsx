@@ -12,8 +12,8 @@ import { CTA } from "@/src/components/cta/CTA";
 export default function HomePage() {
   return (
     <>
+     <Stats />
       <Hero />
-      <Stats />
       <Services />
       <Achievements />
       <Events />

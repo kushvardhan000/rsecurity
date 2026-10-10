@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Eye, ShieldCheck } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { SectionHeader } from "../ui/SectionHeader";
 import { useLenis } from "@/src/lib/lenis";
 import { cn } from "@/src/lib/cn";
 import { DragMarquee } from "@/src/components/ui/DragMarquee";
@@ -134,7 +133,7 @@ function LocalLightbox({
                 alt={item.name}
                 fill
                 className="object-contain"
-                sizes="100vw"
+                sizes="100%"
                 priority
               />
             </motion.div>

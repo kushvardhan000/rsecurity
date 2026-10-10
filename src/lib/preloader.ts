@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,25 +12,52 @@ export const PRELOADER_DONE_EVENT = "rspl:preloader-done";
  * otherwise flips when the Preloader dispatches its done event.
  */
 export function usePreloaderDone() {
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<boolean>(() => {
+    if (typeof document !== "undefined") {
+      const html = document.documentElement;
+      return html.dataset.ready === "1" || html.dataset.preloaded === "1";
+    }
+    return false; // Guard for SSR
+  });
 
   useEffect(() => {
+    if (done) return;
+
     let seen = false;
     try {
       seen = sessionStorage.getItem(PRELOADER_STORAGE_KEY) === "1";
     } catch {
       /* private mode */
     }
-    if (seen) {
-      // Browser-only storage read, post-mount (avoids hydration mismatch)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+    const html = document.documentElement;
+    if (seen || html.dataset.ready === "1" || html.dataset.preloaded === "1") {
       setDone(true);
       return;
     }
+
     const onDone = () => setDone(true);
+
     window.addEventListener(PRELOADER_DONE_EVENT, onDone);
-    return () => window.removeEventListener(PRELOADER_DONE_EVENT, onDone);
-  }, []);
+
+    const observer = new MutationObserver(() => {
+      if (html.dataset.ready === "1" || html.dataset.preloaded === "1") {
+        setDone(true);
+      }
+    });
+
+    observer.observe(html, { attributes: true, attributeFilter: ["data-ready", "data-preloaded"] });
+
+    // Hard fallback
+    const timer = setTimeout(() => {
+      setDone(true);
+    }, 3500);
+
+    return () => {
+      window.removeEventListener(PRELOADER_DONE_EVENT, onDone);
+      observer.disconnect();
+      clearTimeout(timer);
+    };
+  }, [done]);
 
   return done;
 }

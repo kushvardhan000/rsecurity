@@ -150,17 +150,17 @@ export function CareersClient() {
                             <Check className="w-8 h-8" />
                           </div>
                           <h4 className="font-serif text-xl font-medium text-[var(--color-grey-dark)] mb-2">Application Received</h4>
-                          <p className="text-[var(--color-grey-mid)]">We'll review your application and contact you if shortlisted.</p>
+                          <p className="text-[var(--color-grey-mid)]">We&apos;ll review your application and contact you if shortlisted.</p>
                         </motion.div>
                       ) : (
-                        <motion.form
+                        <motion.div
                           key="form"
-                          onSubmit={handleSubmit}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="space-y-5"
+                          className="w-full"
                         >
+                          <form onSubmit={handleSubmit} className="space-y-5">
                           <div>
                             <label htmlFor="name" className="block text-[11px] font-bold tracking-widest uppercase text-[var(--color-grey-dark)] mb-2">
                               Full Name
@@ -279,7 +279,7 @@ export function CareersClient() {
                             {status === "submitting" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
                             {status === "submitting" ? "Submitting..." : "Submit Application"}
                           </button>
-                        </motion.form>
+                        </form></motion.div>
                       )}
                     </AnimatePresence>
                   </div>

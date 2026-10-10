@@ -18,7 +18,7 @@ export const SITE = {
   socials: [
     { label: "Email", href: "mailto:security.rsp@gmail.com" },
     { label: "Twitter", href: "https://twitter.com/RSPL6" },
-    { label: "Facebook", href: "https://www.facebook.com/" },
+    /* { label: "Facebook", href: "https://www.facebook.com/" }, */
   ],
 
   stats: {

@@ -6,7 +6,6 @@ import { ArrowUpRight, Shield, Radio, CheckCircle2 } from "lucide-react";
 import {
   FEATURED_SERVICES,
   ALSO_SERVICES,
-  type FeaturedService,
 } from "@/src/data/services";
 import { Reveal } from "../ui/Reveal";
 import { cn } from "@/src/lib/cn";

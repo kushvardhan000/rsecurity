@@ -1,0 +1,184 @@
+const fs = require('fs');
+
+const content = `"use client";
+import React from "react";
+import CountUp from "react-countup";
+import { usePreloaderDone } from "@/src/lib/preloader";
+
+const BADGE_SIDE: "left" | "right" = "right";
+
+function TrustMedallion({
+  year = "1995",
+  label = "SINCE",
+  className,
+}: {
+  year?: string;
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={\`shrink-0 flex items-center justify-center relative select-none \${
+        className || ""
+      }\`}
+    >
+      <div className="relative w-full h-full transition-transform duration-300 hover:scale-[1.03]">
+        <svg
+          viewBox="0 0 200 200"
+          className="w-full h-full overflow-visible"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="goldRim" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#d4af37" />
+              <stop offset="22%" stopColor="#fff6b8" />
+              <stop offset="44%" stopColor="#c59b27" />
+              <stop offset="70%" stopColor="#f3cf65" />
+              <stop offset="88%" stopColor="#966a15" />
+              <stop offset="100%" stopColor="#ffd875" />
+            </linearGradient>
+
+            <linearGradient id="goldLuster" x1="0%" y1="0%" x2="100%" y2="85%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="25%" stopColor="#fde089" />
+              <stop offset="50%" stopColor="#dfa72c" />
+              <stop offset="78%" stopColor="#9a6e16" />
+              <stop offset="100%" stopColor="#ffea9f" />
+            </linearGradient>
+
+            <radialGradient id="maroonPlate" cx="48%" cy="45%" r="55%">
+              <stop offset="0%" stopColor="#b4232c" />
+              <stop offset="65%" stopColor="#87171e" />
+              <stop offset="100%" stopColor="#5c0d12" />
+            </radialGradient>
+
+            <filter id="goldEmboss" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1.6" stdDeviation="0.9" floodColor="#380005" floodOpacity="0.85" />
+            </filter>
+
+            <path
+              id="establishedArc"
+              d="M 44 95 A 58 58 0 0 1 156 95"
+              fill="none"
+            />
+          </defs>
+
+          <g className="animate-[spin_24s_linear_infinite] [transform-origin:100px_100px]">
+            <path
+              d={(() => {
+                const points = 36;
+                const cx = 100, cy = 100, outerR = 98, innerR = 86;
+                let pathStr = "";
+                for (let i = 0; i <= points * 2 - 1; i++) {
+                  const angle = (i * Math.PI) / points - Math.PI / 2;
+                  const r = i % 2 === 0 ? outerR : innerR;
+                  const x = cx + r * Math.cos(angle);
+                  const y = cy + r * Math.sin(angle);
+                  pathStr += \`\${i === 0 ? "M" : "L"} \${x.toFixed(2)} \${y.toFixed(2)} \`;
+                }
+                return pathStr + "Z";
+              })()}
+              fill="url(#goldRim)"
+            />
+          </g>
+
+          <circle cx="100" cy="100" r="82" fill="none" stroke="url(#goldLuster)" strokeWidth="4" />
+          <circle cx="100" cy="100" r="79.5" fill="none" stroke="#68470a" strokeWidth="0.8" opacity="0.6" />
+
+          <circle cx="100" cy="100" r="78" fill="url(#maroonPlate)" />
+
+          <circle
+            cx="100"
+            cy="100"
+            r="70"
+            fill="none"
+            stroke="url(#goldLuster)"
+            strokeWidth="1.2"
+            opacity="0.9"
+          />
+
+          <g filter="url(#goldEmboss)">
+            <text
+              fill="url(#goldLuster)"
+              fontSize="9"
+              fontWeight="800"
+              letterSpacing="0.28em"
+              className="uppercase select-none"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+            >
+              <textPath href="#establishedArc" startOffset="50%" textAnchor="middle">
+                ESTABLISHED
+              </textPath>
+            </text>
+          </g>
+
+          <polygon
+            points="100,69 101.8,74.2 107.2,74.2 102.8,77.5 104.5,82.8 100,79.5 95.5,82.8 97.2,77.5 92.8,74.2 98.2,74.2"
+            fill="url(#goldLuster)"
+            filter="url(#goldEmboss)"
+          />
+
+          <g filter="url(#goldEmboss)">
+            <text
+              x="100"
+              y="105"
+              textAnchor="middle"
+              className="font-serif font-extrabold tracking-[0.16em]"
+              fill="url(#goldLuster)"
+              fontSize="21"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+            >
+              {label}
+            </text>
+
+            <text
+              x="100"
+              y="139"
+              textAnchor="middle"
+              className="font-serif font-black tracking-tight"
+              fill="url(#goldLuster)"
+              fontSize="34"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+            >
+              {year}
+            </text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+export const Stats: React.FC = () => {
+  const preloaderDone = usePreloaderDone();
+  return (
+    <section
+      id="stats"
+      data-tone="light"
+      className="relative w-full bg-white border-b border-[#E3E1DE] overflow-hidden"
+      style={{
+        paddingTop: "calc(var(--nav-h, 80px) + env(safe-area-inset-top) + 8px)"
+      }}
+    >
+      <div className="relative mx-auto w-full max-w-[1240px] px-5 sm:px-8 lg:px-12 pb-[16px] sm:pb-[24px] lg:pb-[28px] flex flex-col justify-center">
+        {/* Mobile Layout (<640px) */}
+        <div className="sm:hidden grid grid-cols-[1fr_auto_1fr_auto] gap-3 items-center w-full">
+          {BADGE_SIDE === "left" && (
+            <TrustMedallion className="w-[60px] h-[60px] shrink-0" />
+          )}
+
+          <div className={\`flex items-center justify-between w-full \${BADGE_SIDE === "right" ? "col-span-3" : "col-span-3"}\`}>
+             {/* Actual grid implementation per spec: one compact row: grid grid-cols-[1fr_1fr_auto] gap-3 items-center */}
+          </div>
+        </div>
+
+        {/* 
+           Redoing Mobile properly with grid grid-cols-[1fr_1fr_auto] 
+           Wait, divider in between 1fr 1fr ? I can use a simple grid setup.
+        */}
+      </div>
+    </section>
+  );
+};
+`;
+fs.writeFileSync('src/components/hero/Stats.tsx.example', content, 'utf8');

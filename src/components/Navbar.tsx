@@ -1,9 +1,11 @@
+/* eslint-disable */
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { X, Phone, Menu, MessageCircle } from "lucide-react";
+import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
+import { X, Phone, Menu, MessageCircle, ChevronRight } from "lucide-react";
 import {
   NAV_LINKS,
   SECONDARY_LINKS,
@@ -36,7 +38,17 @@ const MOBILE_SECONDARY = [
   { label: "Careers", href: "/careers" },
 ];
 
+const DESKTOP_PANEL_LINKS = [
+  { label: "Events", href: "/events" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Careers", href: "/careers" },
+  { label: "Training", href: "/training" },
+  { label: "Press", href: "/press" },
+];
+
 /* ── Overlay lock hook ───────────────────────────── */
+
+const lockCountRef = { current: 0 };
 
 function useOverlayLock(
   isOpen: boolean,
@@ -48,8 +60,12 @@ function useOverlayLock(
   useEffect(() => {
     if (!isOpen) return;
 
-    // Use counter-based stop/start from Lenis context
-    lenis?.stop();
+    lockCountRef.current += 1;
+    if (lockCountRef.current === 1) {
+      lenis?.stop();
+      document.documentElement.style.overflow = "hidden";
+      document.documentElement.style.scrollbarGutter = "stable";
+    }
 
     const container = containerRef.current;
     const trigger = triggerRef.current;
@@ -78,7 +94,12 @@ function useOverlayLock(
     document.addEventListener("keydown", onKey);
 
     return () => {
-      lenis?.start();
+      lockCountRef.current -= 1;
+      if (lockCountRef.current === 0) {
+        lenis?.start();
+        document.documentElement.style.overflow = "";
+        document.documentElement.style.scrollbarGutter = "";
+      }
       document.removeEventListener("keydown", onKey);
       trigger?.focus();
     };
@@ -104,15 +125,20 @@ export function Navbar() {
   const lenis = useLenis();
   const preloaderDone = usePreloaderDone();
 
-  /* ── Scroll: shrink + hide/show ────────────────── */
-
+  /* ── Scroll: shrink + hide/show + Tone compute ──── */
+  const [tone, setTone] = useState<string | null>(pathname === "/" ? "light" : "dark");
+  const [noAnim, setNoAnim] = useState(true);
+  
   useEffect(() => {
-    const onScroll = () => {
+    const compute = () => {
       cancelAnimationFrame(rafIdRef.current);
       rafIdRef.current = requestAnimationFrame(() => {
         const y = window.scrollY;
         setScrolled(y > SCROLL_SHRINK);
 
+        if (y < 80) {
+          setVisible(true);
+        }
         if (
           y > SCROLL_HIDE &&
           y > lastYRef.current + SCROLL_DELTA &&
@@ -124,21 +150,41 @@ export function Navbar() {
           setVisible(true);
         }
         lastYRef.current = y;
+
+        const currentHeaderHeight = (window.innerWidth >= 1024 && !(y > SCROLL_SHRINK)) ? 80 : 68;
+        const els = document.elementsFromPoint(window.innerWidth / 2, currentHeaderHeight + 4);
+        let t = null;
+        for (const el of els) {
+          if (!el.closest("header")) {
+            t = el.closest("[data-tone]")?.getAttribute("data-tone") || null;
+            break;
+          }
+        }
+        if (t !== null) {
+          setTone(t);
+        }
       });
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
+    compute();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(compute);
+    }
+    window.addEventListener("scroll", compute, { passive: true });
+    window.addEventListener("resize", compute, { passive: true });
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", compute);
+      window.removeEventListener("resize", compute);
       cancelAnimationFrame(rafIdRef.current);
     };
-  }, [menuOpen, panelOpen]);
+  }, [menuOpen, panelOpen, preloaderDone, pathname]);
+
+  const solid = scrolled || tone === "light";
 
   /* ── Active section via IntersectionObserver ────── */
 
   useEffect(() => {
     if (pathname !== "/") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActive(pathname.slice(1).split("/")[0]);
       return;
     }
@@ -167,7 +213,32 @@ export function Navbar() {
   useEffect(() => {
     setMenuOpen(false);
     setPanelOpen(false);
+    setVisible(true);
   }, [pathname]);
+
+  // Window focus listener
+  useEffect(() => {
+    const onFocus = () => setVisible(true);
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
+  // When menu/panel opens or scroll < 80, setVisible(true) handles by effect
+
+
+  /* ── Resize listener ─────────────────────────────── */
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) {
+        setMenuOpen(false);
+      } else {
+        setPanelOpen(false);
+      }
+    };
+    mql.addEventListener("change", handleChange);
+    return () => mql.removeEventListener("change", handleChange);
+  }, []);
 
   /* ── Open / close handlers ─────────────────────── */
 
@@ -189,52 +260,110 @@ export function Navbar() {
   useOverlayLock(menuOpen, menuRef, menuBtnRef, closeMenu, lenis);
   useOverlayLock(panelOpen, panelRef, panelBtnRef, closePanel, lenis);
 
-  const navReady = preloaderDone;
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  const [navReady, setNavReady] = useState(preloaderDone);
+
+  useEffect(() => {
+    if (navReady) return;
+    if (
+      preloaderDone ||
+      document.documentElement.dataset.ready === "1" ||
+      document.documentElement.dataset.preloaded === "1"
+    ) {
+      setNavReady(true);
+      return;
+    }
+    const t = setTimeout(() => setNavReady(true), 3000);
+    return () => clearTimeout(t);
+  }, [preloaderDone, navReady]);
+
+  // Generate clean telecom paths
+  let mobileWa = "";
+  let callWa = "";
+  const phoneParts = SITE.contact.phone.split(",");
+  if (phoneParts.length > 0) {
+      let firstClean = phoneParts[0].trim().replace(/\D/g, "");
+      if (firstClean.startsWith("0")) firstClean = firstClean.slice(1);
+      callWa = firstClean;
+  }
+  for (const p of phoneParts) {
+    let clean = p.trim().replace(/\D/g, "");
+    if (clean.startsWith("0")) clean = clean.slice(1);
+    if (clean.length >= 10 && /^[6-9]/.test(clean.slice(-10))) {
+      mobileWa = clean.slice(-10);
+      break;
+    }
+  }
+
+  const callHref = callWa ? `tel:+91${callWa}` : "#";
+  const waHref = mobileWa ? `https://wa.me/91${mobileWa}` : "#";
 
   return (
     <>
       <header
         role="banner"
-        className={cn(
-          "fixed inset-x-0 top-0 z-50 transition-all duration-300 pointer-events-auto",
-          "lg:bg-white/90 lg:backdrop-blur-md lg:border-b",
-          scrolled
-            ? "bg-white/92 backdrop-blur-md border-b border-neutral-200/90 shadow-sm h-[64px] lg:h-[72px]"
-            : "bg-transparent border-transparent lg:border-neutral-200/50 h-[64px] lg:h-[84px]",
-          /* removed pt-[env...] so logo tab hits true ceiling */
-        )}
+        className={cn("fixed inset-x-0 top-0 z-50 pointer-events-auto", noAnim && "nav-no-anim")}
         style={{
-          opacity: navReady ? 1 : 0,
-          transform: navReady
-            ? visible
-              ? "translateY(0)"
-              : "translateY(-100%)"
-            : "translateY(-100%)",
-          transition:
-            "opacity 0.5s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1), background-color 0.3s ease, height 0.3s ease",
+          paddingTop: "env(safe-area-inset-top)",
+          opacity: 1,
+          transform: visible ? "translateY(0)" : "translateY(-100%)",
+          transition: noAnim ? "none" : "opacity 0.5s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)",
         }}
       >
-        <div className="mx-auto flex items-center justify-between px-0 lg:px-8 max-w-[1360px] w-full h-[calc(64px+env(safe-area-inset-top))] lg:h-full">
-          {/* ── Logo Tab (100% Seamless & Transparent) ──── */}
-          <a
+        {noAnim && (<style>{'.nav-no-anim, .nav-no-anim * { transition: none !important; }'}</style>)}
+        {/* Scrim */}
+        {!solid && (
+          <div
+            className="absolute inset-x-0 top-0 pointer-events-none transition-opacity duration-300 opacity-100"
+            style={{
+              height: "140px",
+              background: "linear-gradient(to bottom, rgba(42,6,12,.7), transparent)",
+            }}
+          />
+        )}
+
+        {/* White BG */}
+        <div
+          className={cn(
+            "absolute inset-0 pointer-events-none transition-all duration-300",
+            solid
+              ? "opacity-100 bg-white/94 backdrop-blur-md border-b border-neutral-200"
+              : "opacity-0 bg-transparent border-transparent"
+          )}
+        />
+
+        <div
+          className={cn(
+            "relative z-10 mx-auto flex items-center justify-between px-4 lg:px-6 xl:px-8 max-w-[1360px] w-full transition-[height] duration-300",
+            scrolled ? "h-[68px]" : "h-[68px] lg:h-[80px]"
+          )}
+        >
+          {/* Logo Lockup */}
+          <Link
             href="/"
             aria-label={`${SITE.companyName} — home`}
-            className="relative z-10 flex shrink-0 items-center justify-center bg-white h-full pt-[env(safe-area-inset-top)] lg:pt-0 px-[20px] transition-opacity hover:opacity-95"
+            className="flex items-center gap-2.5 lg:gap-3 transition-opacity hover:opacity-90 py-4 lg:py-2 sm:pl-4"
           >
-            <img
-              src="/logos/rsfullllogoBGTRANSPARENT.png"
-              alt={`${SITE.companyName} logo`}
-              className={cn(
-                "w-auto object-contain transition-all duration-300 mix-blend-multiply py-2",
-                scrolled
-                  ? "h-[44px] lg:h-[64px]"
-                  : "h-[44px] sm:h-[48px] lg:h-[72px]"
-              )}
-            />
-          </a>
+            <div className="relative flex shrink-0 items-center justify-center transition-all duration-300 h-[56px] lg:h-[66px] w-[80px] lg:w-[92px]">
+              <img
+                src="/logos/rsfullllogoBGTRANSPARENT.png"
+                alt={`${SITE.companyName} lockup white`}
+                className={cn(
+                  "absolute inset-0 h-full w-full object-contain filter transition-opacity duration-300",
+                  solid ? "opacity-0" : "opacity-100 "
+                )}
+              />
+              <img
+                src="/logos/rsfullllogoBGTRANSPARENT.png"
+                alt={`${SITE.companyName} lockup color`}
+                className={cn(
+                  "absolute inset-0 h-full w-full object-contain transition-opacity duration-300",
+                  solid ? "opacity-100" : "opacity-0"
+                )}
+              />
+            </div>
+          </Link>
 
-          {/* ── Desktop primary links (>=1024px) ──── */}
+          {/* Desktop Links (>=1024px) */}
           <nav
             aria-label="Primary navigation"
             className="hidden lg:flex items-center gap-1 xl:gap-2"
@@ -242,55 +371,38 @@ export function Navbar() {
             {NAV_LINKS.map((link: NavLink) => {
               const isActive = active === link.href.slice(1);
               return (
-                <a
+                <Link
                   key={link.label}
                   href={link.href}
                   aria-current={isActive ? "true" : undefined}
                   className={cn(
                     "group relative px-3 py-2 text-[13px] font-semibold tracking-[0.05em] uppercase transition-colors duration-200",
-                    isActive
-                      ? "text-[#800020]"
-                      : "text-neutral-700 hover:text-[#800020]"
+                    solid
+                      ? isActive
+                        ? "text-[#800020]"
+                        : "text-neutral-700 hover:text-[#800020]"
+                      : isActive
+                      ? "text-white"
+                      : "text-white/80 hover:text-white"
                   )}
                 >
                   {link.label}
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "absolute left-3 right-3 bottom-[3px] h-[2px] rounded-full bg-[#800020] transition-transform duration-300 ease-out origin-left",
-                      isActive
-                        ? "scale-x-100"
-                        : "scale-x-0 group-hover:scale-x-100"
+                      "absolute left-3 right-3 bottom-[3px] h-[2px] rounded-full transition-transform duration-300 ease-out origin-left",
+                      solid ? "bg-[#800020]" : "bg-white",
+                      isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                     )}
                   />
-                </a>
+                </Link>
               );
             })}
           </nav>
 
-          {/* ── Right actions ────────────────────────── */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3 h-full pt-[env(safe-area-inset-top)] lg:pt-0 pr-3.5 sm:pr-6 lg:pr-0">
-            {/* Phone (Desktop) */}
-            <a
-              href="/contact"
-              aria-label="Call us"
-              className={cn(
-                "hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-md border text-[13px] font-semibold tracking-[0.03em] transition-all duration-200",
-                "text-neutral-800 border-neutral-300 hover:border-[#800020] hover:text-[#800020] bg-white/70"
-              )}
-            >
-              <Phone aria-hidden="true" className="h-3.5 w-3.5 text-[#800020]" />
-              <span>{SITE.contact.phone.split(",")[0].trim()}</span>
-            </a>
-
-            {/* Request a Quote (Desktop) */}
-            <MagneticButton
-              href="/contact"
-              variant="primary"
-              className="hidden lg:inline-flex h-[38px] !px-4 xl:!px-5 !text-[12px] xl:!text-[13px] uppercase font-semibold tracking-wider bg-[#800020] hover:bg-[#600018] text-white shadow-sm rounded-md"
-            >
-              Request a Quote
-            </MagneticButton>
+          {/* Right Actions */}
+          <div className="flex items-center gap-3 lg:gap-4 shrink-0">
+            
 
             {/* Desktop More Menu */}
             <button
@@ -301,15 +413,17 @@ export function Navbar() {
               aria-expanded={panelOpen}
               aria-controls="desktop-panel"
               className={cn(
-                "hidden lg:flex h-[38px] items-center gap-1.5 px-3 rounded-md border text-[12px] xl:text-[13px] font-semibold tracking-wider uppercase transition-colors cursor-pointer",
-                "text-neutral-700 border-neutral-300 hover:border-[#800020] hover:text-[#800020] bg-white/70"
+                "hidden lg:flex h-[44px] items-center gap-1.5 px-4 rounded-md border text-[13px] font-semibold tracking-wider uppercase transition-colors cursor-pointer",
+                solid
+                  ? "text-neutral-700 border-neutral-300 hover:border-[#800020] hover:text-[#800020] bg-white/70"
+                  : "text-white border-white/35 hover:border-white hover:bg-white/10 bg-transparent backdrop-blur-xs"
               )}
             >
               <Menu aria-hidden="true" className="h-4 w-4" />
               <span>More</span>
             </button>
 
-            {/* Hamburger trigger (Mobile) */}
+            {/* Mobile Hamburger trigger (<1024px) */}
             <button
               ref={menuBtnRef}
               type="button"
@@ -317,9 +431,27 @@ export function Navbar() {
               aria-label="Open menu"
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
-              className="lg:hidden flex h-[44px] w-[44px] shrink-0 items-center justify-center bg-white/95 text-maroon-950 shadow-sm active:scale-95 transition-all cursor-pointer rounded-md border border-neutral-200/50"
+              className={cn(
+                "lg:hidden flex relative h-[40px] w-[40px] shrink-0 items-center justify-center rounded-md border transition-all cursor-pointer backdrop-blur-xs",
+                solid
+                  ? "border-[#800020]/25 bg-white/50 hover:bg-white"
+                  : "border-white/35 bg-white/10 hover:bg-white/20"
+              )}
             >
-              <Menu aria-hidden="true" className="h-6 w-6" />
+              <Menu
+                aria-hidden="true"
+                className={cn(
+                  "absolute inset-0 m-auto h-6 w-6 transition-opacity duration-300",
+                  solid ? "opacity-0 text-white" : "opacity-100 text-white"
+                )}
+              />
+              <Menu
+                aria-hidden="true"
+                className={cn(
+                  "absolute inset-0 m-auto h-6 w-6 transition-opacity duration-300",
+                  solid ? "opacity-100 text-[#800020]" : "opacity-0"
+                )}
+              />
             </button>
           </div>
         </div>
@@ -328,6 +460,7 @@ export function Navbar() {
       {/* ═══════════════════════════════════════════════
           MOBILE FULL-SCREEN MENU (<1024px)
           ═══════════════════════════════════════════════ */}
+
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -336,103 +469,133 @@ export function Navbar() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu"
-            className="fixed inset-0 z-[60] flex flex-col bg-[#2a060c] text-white overflow-hidden overscroll-contain select-none"
+            className="fixed inset-0 z-[60] flex flex-col bg-[#2a060c] bg-gradient-to-br from-[#2a060c] to-[#4a0012]/80 text-white overflow-hidden select-none w-full max-w-full h-[100dvh]"
             style={{
-              /* paddingTop handled inside Top Bar */
+              paddingTop: "env(safe-area-inset-top)",
               paddingRight: "env(safe-area-inset-right)",
               paddingBottom: "env(safe-area-inset-bottom)",
               paddingLeft: "env(safe-area-inset-left)",
-              height: "100dvh",
             }}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: EASE }}
           >
-            {/* Top Bar inside Menu (Matches Navbar) */}
-            <div className="flex items-center justify-between pr-3.5 sm:pr-6 h-[calc(64px+env(safe-area-inset-top))] shrink-0">
-              <a href="/" className="h-full pt-[env(safe-area-inset-top)] px-[20px] bg-white flex items-center justify-center">
-                <img
-                  src="/logos/rsfullllogoBGTRANSPARENT.png"
-                  alt={`${SITE.companyName} logo`}
-                  className="h-[44px] sm:h-[48px] w-auto object-contain mix-blend-multiply py-2"
-                />
-              </a>
+            {/* 1.a WATERMARK LAYER */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none [@media(max-height:520px)]:hidden" aria-hidden="true">
+              <img
+                src="/logos/rsshortlogoBGTRANSPARENT.png"
+                alt=""
+                className="absolute bottom-[-10%] right-[-12%] w-[70vw] md:w-[340px] max-w-none opacity-[0.06] object-contain filter brightness-0 invert"
+              />
+            </div>
+
+            {/* 1.b HEADER (shrink-0, relative z-10) */}
+            <div className="relative z-10 shrink-0 flex items-center justify-between px-4 sm:px-6 h-[68px]">
+              <Link href="/" onClick={closeMenu} className="flex group items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0">
+                <div className="relative flex shrink-0 items-center justify-center h-[48px] w-[72px]">
+                  <img
+                    src="/logos/rsshortlogoBGTRANSPARENT.png"
+                    alt={`${SITE.companyName} logo`}
+                    className="absolute inset-0 h-full w-full object-contain filter brightness-0 invert"
+                  />
+                </div>
+                <div className="hidden min-[340px]:flex flex-col justify-center text-white min-w-0">
+                  <span
+                    className="text-[18px] font-semibold leading-tight truncate"
+                    style={{ fontFamily: "var(--font-display-serif)" }}
+                  >
+                    Ranchi Security
+                  </span>
+                  <span className="text-[11px] tracking-[0.1em] uppercase leading-[1.2] mt-[1px] opacity-90 truncate">
+                    Est. 1995
+                  </span>
+                </div>
+              </Link>
               <button
                 type="button"
                 onClick={closeMenu}
                 aria-label="Close menu"
-                className="flex h-[44px] w-[44px] mt-[env(safe-area-inset-top)] items-center justify-center bg-white/10 text-white hover:bg-white/20 active:scale-95 transition-colors cursor-pointer rounded-md"
+                className="flex shrink-0 h-[44px] w-[44px] items-center justify-center text-white hover:bg-white/10 transition-colors cursor-pointer rounded-md"
               >
                 <X aria-hidden="true" className="h-6 w-6" />
               </button>
             </div>
 
-            {/* Links Stack (Main area) - landscape-aware scrolling */}
-            <div className="flex-1 flex flex-col px-6 sm:px-10 overflow-y-auto pb-[130px] justify-center landscape:justify-start landscape:pt-6">
-              <nav aria-label="Mobile navigation" className="flex flex-col">
-                {MOBILE_PRIMARY.map((link, i) => {
-                  const isActive = active === link.href.slice(1) || (pathname === link.href);
-                  return (
-                    <a
-                      key={link.label}
-                      href={link.href}
-                      onClick={closeMenu}
-                      className="group relative flex items-center h-[60px] border-b border-white/10 text-white pl-4 -ml-4"
-                    >
-                      {/* Active Indicator */}
-                      <span className={cn(
-                        "absolute left-0 top-[14px] bottom-[14px] w-[2px] bg-[var(--color-rose)] transition-opacity duration-300",
-                        isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                      )} />
+            {/* 1.c SCROLL AREA */}
+            <div className="relative z-10 min-h-0 flex-1 flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-6 sm:px-8 landscape:pt-4" data-lenis-prevent>
+              <div className="flex flex-col flex-1 justify-center min-w-0">
+                <nav aria-label="Mobile navigation" className="rounded-2xl bg-[#5A0F1C] border border-white/10 p-2 mt-4 flex flex-col min-w-0 shrink-0">
+                  {MOBILE_PRIMARY.map((link, idx, arr) => {
+                    const isActive = active === link.href.slice(1) || pathname === link.href;
+                    return (
+                      <div key={link.label}>
+                        <Link
+                          href={link.href}
+                          onClick={closeMenu}
+                          className={cn(
+                            "group flex items-center justify-between rounded-xl px-4 text-white min-w-0 min-h-[52px] [@media(max-height:640px)]:min-h-[44px] hover:bg-[#7A1426] transition-colors active:bg-[#7A1426]",
+                            isActive && "bg-[#7A1426]"
+                          )}
+                        >
+                          <span
+                            className="text-[24px] sm:text-[26px] min-w-0 leading-tight"
+                            style={{ fontFamily: "var(--font-display-serif)" }}
+                          >
+                            {link.label}
+                          </span>
+                          <ChevronRight className="w-5 h-5 text-white/50 shrink-0" />
+                        </Link>
+                        {idx < arr.length - 1 && (
+                          <div className="h-[1px] w-full bg-white/10 my-0.5 pointer-events-none" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </nav>
+              </div>
 
-                      <span className="w-10 text-[11px] font-mono tracking-wider text-rose">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span
-                        className="text-[30px]"
-                        style={{ fontFamily: "var(--font-display-serif)" }}
-                      >
-                        {link.label}
-                      </span>
-                    </a>
-                  );
-                })}
-              </nav>
-
-              {/* Secondary links (Events • Gallery • Careers) */}
-              <div className="mt-5 flex flex-wrap items-center gap-3 text-[14px] text-white/70">
-                {MOBILE_SECONDARY.map((link, i) => (
-                  <div key={link.label} className="flex items-center gap-3">
-                    <a href={link.href} onClick={closeMenu} className="hover:text-white transition-colors">
-                      {link.label}
-                    </a>
-                    {i < MOBILE_SECONDARY.length - 1 && (
-                      <span aria-hidden="true" className="text-white/30">&bull;</span>
-                    )}
-                  </div>
+              {/* Secondary links */}
+              <div className="mt-4 mb-4 flex items-center gap-5 text-[14px] text-white/75 shrink-0 flex-wrap min-w-0 h-[clamp(2.5rem,6dvh,3.5rem)]">
+                {MOBILE_SECONDARY.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={closeMenu}
+                    className="hover:text-white transition-colors truncate min-w-0"
+                  >
+                    {link.label}
+                  </Link>
                 ))}
               </div>
             </div>
 
-            {/* Footer / Pinned Area (Safe-area aware) */}
-            <div className="absolute bottom-0 inset-x-0 px-6 sm:px-10 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-5 shrink-0 bg-maroon-950/95 backdrop-blur-md border-t border-white/10">
-              <div className="flex flex-col gap-4">
-                <a
+            {/* 1.d FOOTER BLOCK */}
+            <div className="relative z-10 shrink-0 border-t border-white/10 p-5 [@media(max-height:640px)]:p-3" style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
+              <div className="grid gap-3 [@media(max-height:520px)]:grid-cols-2 landscape:grid-cols-2">
+                <Link
                   href="/contact"
                   onClick={closeMenu}
-                  className="w-full h-[52px] flex items-center justify-center rounded-sm bg-white text-maroon-950 font-semibold text-[15px] tracking-[0.03em] shadow-md active:scale-[0.99] transition-transform"
+                  className="flex items-center justify-center h-[52px] [@media(max-height:640px)]:h-[48px] w-full rounded-md bg-white text-[#800020] font-semibold text-[15px] tracking-[0.03em] shadow-md active:scale-[0.99] transition-transform pointer-events-auto shrink-0"
                 >
                   Request a Quote
-                </a>
+                </Link>
 
-                <div className="flex items-center justify-between text-[14px] text-white/85">
-                  <a href={`tel:${SITE.contact.phone.split(",")[0].replace(/\s+/g, "")}`} className="flex items-center gap-2 hover:text-white transition-colors">
-                    <Phone className="w-4 h-4" />
+                <div className="grid grid-cols-2 gap-2 h-12 shrink-0 w-full">
+                  <a
+                    href={callHref}
+                    className="flex items-center justify-center gap-2 h-full w-full rounded-md border border-white/20 bg-white/5 hover:bg-white/10 transition-colors px-2 text-[14px] min-w-0 shrink-0"
+                  >
+                    <Phone className="w-4 h-4 shrink-0" />
                     <span>Call us</span>
                   </a>
-                  <a href={`https://wa.me/91${SITE.contact.phone.split(",")[0].replace(/\s+/g, "").replace("+91", "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors">
-                    <MessageCircle className="w-4 h-4" />
+                  <a
+                    href={waHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 h-full w-full rounded-md border border-white/20 bg-white/5 hover:bg-white/10 transition-colors px-2 text-[14px] min-w-0 shrink-0"
+                  >
+                    <MessageCircle className="w-4 h-4 shrink-0" />
                     <span>WhatsApp</span>
                   </a>
                 </div>
@@ -448,7 +611,6 @@ export function Navbar() {
       <AnimatePresence>
         {panelOpen && (
           <>
-            {/* Scrim */}
             <motion.div
               className="fixed inset-0 z-[55] bg-neutral-950/40 backdrop-blur-xs"
               initial={{ opacity: 0 }}
@@ -459,73 +621,123 @@ export function Navbar() {
               aria-hidden="true"
             />
 
-            {/* Panel */}
             <motion.div
               ref={panelRef}
               id="desktop-panel"
               role="dialog"
               aria-modal="true"
               aria-label="More links"
-              className="fixed top-0 right-0 bottom-0 z-[60] w-full max-w-[360px] flex flex-col bg-white text-neutral-800 shadow-2xl border-l border-neutral-200 overflow-y-auto"
-              data-lenis-prevent
+              className="fixed inset-y-0 right-0 z-[60] w-[min(420px,100vw)] max-w-full flex flex-col bg-[#2a060c] bg-gradient-to-br from-[#2a060c] to-[#4a0012]/80 text-white shadow-2xl overflow-hidden h-[100dvh]"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ duration: 0.45, ease: EASE }}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-neutral-100">
-                <span className="text-[12px] font-bold tracking-[0.2em] uppercase text-[#800020]">
-                  Menu
-                </span>
+              {/* WATERMARK LAYER */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none [@media(max-height:520px)]:hidden" aria-hidden="true">
+                <img
+                  src="/logos/rsshortlogoBGTRANSPARENT.png"
+                  alt=""
+                  className="absolute bottom-[-10%] right-[-12%] w-[340px] max-w-none opacity-[0.06] object-contain filter brightness-0 invert"
+                />
+              </div>
+
+              {/* HEADER */}
+              <div className="relative z-10 shrink-0 flex justify-end px-6 pt-4 pb-0" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
                 <button
                   type="button"
                   onClick={closePanel}
                   aria-label="Close panel"
-                  className="flex h-[36px] w-[36px] items-center justify-center rounded-full hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer"
+                  className="flex shrink-0 h-[44px] w-[44px] items-center justify-center rounded-md hover:bg-white/10 text-white transition-colors cursor-pointer"
                 >
-                  <X aria-hidden="true" className="h-5 w-5" />
+                  <X aria-hidden="true" className="h-6 w-6" />
                 </button>
               </div>
 
-              {/* Secondary links */}
-              <nav
-                aria-label="Secondary navigation"
-                className="flex-1 flex flex-col px-6 py-4"
-              >
-                {SECONDARY_LINKS.map((link, i) => (
-                  <motion.a
-                    key={link.label}
-                    href={link.href}
-                    onClick={closePanel}
-                    initial={{ opacity: 0, x: 15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{
-                      duration: 0.35,
-                      delay: 0.08 + i * 0.05,
-                      ease: EASE,
-                    }}
-                    className="group flex items-center h-[52px] border-b border-neutral-100 text-[16px] font-medium text-neutral-700 transition-colors hover:text-[#800020]"
-                  >
-                    {link.label}
-                  </motion.a>
-                ))}
-              </nav>
+              {/* SCROLL AREA */}
+              <div className="relative z-10 min-h-0 flex-1 flex flex-col justify-center px-12 overflow-y-auto overscroll-contain overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-lenis-prevent>
+                <nav aria-label="Secondary navigation" className="flex flex-col justify-center min-w-0">
+                  {DESKTOP_PANEL_LINKS.map((link, i) => (
+                    <motion.div
+                      key={link.label}
+                      initial={{ opacity: 0, x: 15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{
+                        duration: 0.35,
+                        delay: 0.08 + i * 0.05,
+                        ease: EASE,
+                      }}
+                    >
+                      <Link
+                        href={link.href}
+                        onClick={closePanel}
+                        className="block text-white transition-colors hover:text-white/70 min-w-0 leading-[1.2]"
+                        style={{
+                          fontFamily: "var(--font-display-serif)",
+                          fontSize: "clamp(1.25rem, 3.6dvh, 1.75rem)",
+                          paddingBlock: "clamp(0.35rem, 1.3dvh, 0.9rem)"
+                        }}
+                      >
+                        {link.label}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </nav>
+              </div>
 
-              {/* Social icons */}
-              <div className="flex gap-2.5 px-6 py-5 border-t border-neutral-100 bg-neutral-50/70">
-                {SITE.socials.map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    aria-label={s.label}
-                    className="h-[38px] w-[38px] flex items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-[#800020] hover:text-[#800020] hover:bg-neutral-50 shadow-2xs"
-                  >
-                    <span className="text-xs font-semibold">
-                      {s.label.charAt(0)}
-                    </span>
-                  </a>
-                ))}
+              {/* BUTTON BLOCK */}
+              <div className="relative z-10 shrink-0 px-12 mt-2">
+                <Link
+                  href="/contact"
+                  onClick={closePanel}
+                  className="flex w-full items-center justify-center h-[48px] rounded-md bg-white text-[#800020] font-semibold text-[15px] hover:bg-white/90 transition-colors pointer-events-auto shrink-0"
+                >
+                  Request a Quote
+                </Link>
+              </div>
+
+              {/* FOOTER BLOCK */}
+              <div className="relative z-10 shrink-0 px-12 pt-3" style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}>
+                <p className="text-[14px] leading-[1.5] text-white/85 max-w-[34ch] [@media(max-height:520px)]:hidden" style={{ overflowWrap: "anywhere" }}>
+                  {SITE.contact.address}
+                </p>
+                <p className="text-[13px] sm:text-[14px] text-white/85 mt-2 flex flex-wrap gap-x-1">
+                  {SITE.contact.phone.split(",").map((p, idx, arr) => {
+                    const trimmed = p.trim();
+                    if (!trimmed) return null;
+                    let clean = trimmed.replace(/\D/g, "");
+                    if (clean.startsWith("0")) clean = clean.slice(1);
+                    const telLink = `tel:+91${clean}`;
+                    return (
+                      <span key={trimmed} className="whitespace-nowrap">
+                        <a href={telLink} className="hover:text-white transition-colors underline-offset-4 pointer-events-auto">
+                          {trimmed}
+                        </a>
+                        {idx < arr.length - 1 && <span>, </span>}
+                      </span>
+                    );
+                  })}
+                </p>
+                <div className="flex flex-wrap gap-x-5 mt-1">
+                  {SITE.contact.email && (
+                    <a href={`mailto:${SITE.contact.email}`} className="inline-flex min-h-[44px] items-center text-[14px] font-semibold underline underline-offset-4 decoration-white/60 hover:text-[#F2B8BF] transition-colors pointer-events-auto">
+                      Email
+                    </a>
+                  )}
+                  {SITE.socials.map((s) => {
+                    if ((s.href as string) === "https://twitter.com/" || (s.href as string) === "https://www.facebook.com/") return null;
+                    return (
+                      <a
+                        key={s.label}
+                        href={s.href}
+                        aria-label={s.label}
+                        className="inline-flex min-h-[44px] items-center text-[14px] font-semibold underline underline-offset-4 decoration-white/60 hover:text-[#F2B8BF] transition-colors pointer-events-auto"
+                      >
+                        {s.label}
+                      </a>
+                    );
+                  })}
+                </div>
               </div>
             </motion.div>
           </>

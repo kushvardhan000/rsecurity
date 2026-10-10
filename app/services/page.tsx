@@ -1,6 +1,6 @@
 import { PageHeader } from "@/src/components/ui/PageHeader";
 import { Services } from "@/src/components/services/Services";
-import { FEATURED_SERVICES, ALSO_SERVICES } from "@/src/data/services";
+import { ALSO_SERVICES } from "@/src/data/services";
 import Link from "next/link";
 
 export const metadata = {
