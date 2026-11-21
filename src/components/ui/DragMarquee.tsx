@@ -67,6 +67,8 @@ export function DragMarquee({
   });
 
   const rafId = useRef<number>(0);
+  const lastFrameTime = useRef(0);
+  const progressThrottle = useRef(0);
 
   const measure = useCallback(() => {
     if (!containerRef.current || !setRef.current) return;
@@ -102,18 +104,7 @@ export function DragMarquee({
       state.current.isHidden = document.hidden;
     };
     document.addEventListener("visibilitychange", handleVis);
-
-    let pollId: number;
-    const pollPaused = () => {
-      state.current.isPaused = document.documentElement.getAttribute("data-paused") === "true";
-      pollId = requestAnimationFrame(pollPaused);
-    };
-    pollId = requestAnimationFrame(pollPaused);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVis);
-      cancelAnimationFrame(pollId);
-    };
+    return () => document.removeEventListener("visibilitychange", handleVis);
   }, []);
 
   useEffect(() => {
@@ -123,13 +114,19 @@ export function DragMarquee({
     if (!s.isDragging) s.velocity = newBase;
   }, [direction, speed, reduceMotion]);
 
+  // Optimized animation loop with throttling
   useEffect(() => {
     const s = state.current;
-    let didRunProgress = false;
-    if (s.lastTime === 0) s.lastTime = Date.now();
+    if (s.lastTime === 0) s.lastTime = performance.now();
 
-    const loop = () => {
-      const time = Date.now();
+    const loop = (time: number) => {
+      // Throttle to ~60fps (16.67ms)
+      if (time - lastFrameTime.current < 16) {
+        rafId.current = requestAnimationFrame(loop);
+        return;
+      }
+      lastFrameTime.current = time;
+
       const dt = Math.min((time - s.lastTime) / 1000, 0.1);
       s.lastTime = time;
 
@@ -158,11 +155,10 @@ export function DragMarquee({
           trackRef.current.style.transform = `translate3d(${finalX}px, 0, 0)`;
         }
 
-        if (onProgress && (!didRunProgress || time % 3 === 0)) {
-          didRunProgress = true;
-          // Normalize to [0...1]
+        // Throttle progress callback to max 10fps
+        if (onProgress && time - progressThrottle.current > 100) {
+          progressThrottle.current = time;
           const pct = Math.abs(s.x) / s.setWidth;
-          // Invert mapping for left direction since scrolling left decreases X essentially causing inverted bar visual
           onProgress(direction === 'right' ? pct : 1 - pct);
         }
       }
@@ -191,16 +187,15 @@ export function DragMarquee({
     const s = state.current;
     if (s.isDragging) {
       if (e.buttons === 0) {
-         onPointerUp(e);
-         return;
+        onPointerUp(e);
+        return;
       }
       const dx = e.clientX - s.dragStartPoint;
       s.distanceDragged = Math.abs(dx);
       s.x = s.dragStartX + dx;
 
       const deltaX = e.clientX - s.lastPoint;
-      // eslint-disable-next-line react-hooks/purity
-      const t = Date.now();
+      const t = performance.now();
       const dt = Math.max((t - s.lastTime) / 1000, 0.001);
       s.velocity = deltaX / dt;
 

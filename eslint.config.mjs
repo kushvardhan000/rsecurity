@@ -12,6 +12,18 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // One-off codemod / maintenance scripts kept at the repo root.
+    "*.js",
+    "fix-*.mjs",
+    "scripts/**",
+    // Local Playwright and scratch specs.
+    "test-*.spec.ts",
+    "test-tailwind.tsx",
+    "verify-*.mjs",
+    // Generated artifacts.
+    "qa-screenshots/**",
+    "shots/**",
+    "test-results/**",
   ]),
 ]);
 

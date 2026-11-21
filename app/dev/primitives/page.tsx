@@ -20,21 +20,21 @@ const MOCK_ITEMS = [
 
 const LIGHTBOX_ITEMS = [
   {
-    image: "/hero/slide-1-gate.jpg",
+    image: "/hero/1P.jpg",
     imageAlt: "Gate security",
     title: "Gate Security Operations",
     caption: "Professional guards monitoring the main entrance.",
     meta: "2026",
   },
   {
-    image: "/hero/slide-2-industrial.jpg",
+    image: "/hero/F8.png",
     imageAlt: "Industrial security",
     title: "Industrial Plant Safety",
     caption: "Patrolling the perimeter of a large manufacturing facility.",
     meta: "2026",
   },
   {
-    image: "/hero/slide-3-training.jpg",
+    image: "/hero/F6 (1).jpg",
     imageAlt: "Training academy",
     title: "Training & Certification",
     caption: "Cadets undergoing rigorous physical training.",

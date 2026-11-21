@@ -47,7 +47,9 @@ export function LenisProvider({ children }: { children: ReactNode }) {
   const [lockCount, setLockCount] = useState(0);
   const lenisRef = useRef<Lenis | null>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafIdRef = useRef<number | null>(null);
   const pathname = usePathname();
+  const initializedRef = useRef(false);
 
   // Debounced resize helper
   const requestResize = useCallback(() => {
@@ -70,6 +72,9 @@ export function LenisProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (isTouchDevice()) return; // native scroll is smoother on phones
+    if (initializedRef.current) return; // Prevent double initialization
+
+    initializedRef.current = true;
 
     const lenis = new Lenis({
       duration: 1.15,
@@ -78,18 +83,17 @@ export function LenisProvider({ children }: { children: ReactNode }) {
       // We also manually trigger resize for edge cases
     });
 
-    let rafId: number;
     const raf = (time: number) => {
       lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
+      rafIdRef.current = requestAnimationFrame(raf);
     };
-    rafId = requestAnimationFrame(raf);
+    rafIdRef.current = requestAnimationFrame(raf);
 
     lenisRef.current = lenis;
 
     // Resize on window load (images, fonts may have shifted layout)
     const onLoad = () => requestResize();
-    window.addEventListener("load", onLoad);
+    window.addEventListener("load", onLoad, { passive: true });
 
     // Resize after fonts are ready
     document.fonts.ready.then(requestResize);
@@ -101,7 +105,7 @@ export function LenisProvider({ children }: { children: ReactNode }) {
         setStopped(false);
       }
     };
-    window.addEventListener("focus", onFocus);
+    window.addEventListener("focus", onFocus, { passive: true });
 
     // Observe main content for size changes (images, dynamic content)
     const mainContent = document.querySelector("main");
@@ -112,7 +116,10 @@ export function LenisProvider({ children }: { children: ReactNode }) {
     }
 
     return () => {
-      cancelAnimationFrame(rafId);
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
       window.removeEventListener("load", onLoad);
       window.removeEventListener("focus", onFocus);
       if (resizeObserver) {
@@ -123,6 +130,7 @@ export function LenisProvider({ children }: { children: ReactNode }) {
       }
       lenis.destroy();
       lenisRef.current = null;
+      initializedRef.current = false;
     };
   }, [lockCount, requestResize]);
 

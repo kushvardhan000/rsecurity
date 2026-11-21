@@ -1,5 +1,95 @@
 @import "tailwindcss";
 
+/* ── Hero responsive layout ───────────────────────────────────────────
+   Portrait tablets (≤1024px wide) keep the mobile hero layout.
+   Landscape tablets (640–1024px, landscape) and desktop (≥1025px)
+   share a bottom previewer bar: caption left, thumbnails right-aligned
+   within the bottom container. Comma-separated media lists are plain
+   CSS — Tailwind's @custom-variant does not accept them.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Defaults: hide bottom previewer outside wide breakpoints */
+.hero-bar { display: none; }
+
+/* Shared wide styles: landscape tablets AND desktop */
+@media (min-width: 640px) and (orientation: landscape), (min-width: 1025px) {
+  .hero-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 110svh;
+    max-height: 110svh;
+  }
+  .hero-ratio-auto { aspect-ratio: auto; }
+  .hero-photo { position: absolute; inset: 0; height: 100%; width: 100%; }
+  .hero-zoom { animation: heroZoom 8s ease-out forwards; }
+  .hero-focal-desk { object-position: var(--focal-desk); }
+  .hero-bars-hidden { display: none; }
+  .hero-below-hidden { display: none; }
+  .hero-scrim-tablet { display: block; }
+  .hero-content {
+    position: relative; z-index: 20; flex: 1;
+    display: flex; flex-direction: column; justify-content: center;
+    max-width: 1400px; margin-inline: auto;
+    padding: 2rem 2.5rem 1.5rem;
+  }
+  .hero-block {
+    max-width: 42rem; padding-inline: 0; padding-bottom: 0; padding-top: 0;
+  }
+  .hero-kicker-hidden { display: none; }
+  .hero-h1 {
+    overflow: visible; display: block;
+    -webkit-box-orient: horizontal; -webkit-line-clamp: none;
+    font-weight: 600;
+    font-size: clamp(2.3rem, 4.2vw, 3.7rem);
+    line-height: 1.1;
+    margin-bottom: clamp(0.9rem, 1.8vh, 1.5rem);
+  }
+  .hero-p { display: block; font-size: 18px; }
+  .hero-caption { font-size: 0.875rem; line-height: 1.25rem; }
+  .hero-preview { gap: 1.5rem; }
+
+  /* Bottom previewer bar: visible on landscape tablets and desktop */
+  .hero-bar {
+    display: block;
+    position: relative; z-index: 30; width: 100%;
+    background: linear-gradient(to right, transparent, rgba(107,0,26,0.2), rgba(107,0,26,0.75));
+    backdrop-filter: blur(sm);
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .hero-bar-inner {
+    max-width: 1400px; margin-inline: auto; padding-inline: 2.5rem;
+    height: 5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 4rem; min-width: 0;
+  }
+  .hero-strip { width: 444px; }
+  .hero-thumb { width: 4rem; height: 2.5rem; }
+}
+
+/* Desktop overrides (>=1025px): 95svh height, bottom bar replaces strip */
+@media (min-width: 1024px) and (orientation: landscape), (min-width: 1025px) {
+  .hero-layout { height: 95svh; max-height: 95svh; }
+  .hero-scrim-tablet { display: none; }
+  .hero-scrim-desk { display: block; }
+  .hero-content {
+    justify-content: flex-end;
+    padding-inline: 4rem;
+    padding-top: 0;
+    padding-bottom: clamp(2.5rem, 11svh, 16rem);
+  }
+  .hero-h1 { font-size: clamp(2.65rem, 3.75vw, 4rem); }
+  .hero-p { font-size: 19px; max-width: 560px; }
+  .hero-caption { font-size: 0.75rem; line-height: 1rem; }
+  .hero-caption-row { display: flex; }
+}
+
+/* Ultra-wide desktop refinements */
+@media (min-width: 1280px) and (orientation: landscape), (min-width: 1281px) {
+  .hero-p { font-size: clamp(1.3125rem, 1.45vw, 1.4rem); max-width: 620px; }
+  .hero-h1 { font-size: clamp(3.15rem, 3.15vw, 4.8rem); }
+}
+
 @theme {
   /* ── Brand red (accent, used sparingly) ───────────────── */
   --color-accent: #A6192E;

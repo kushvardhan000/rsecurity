@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { ArrowLeft, RefreshCcw } from "lucide-react";
 
 export default function GlobalError({
@@ -36,13 +37,13 @@ export default function GlobalError({
                 <RefreshCcw className="w-4 h-4" />
                 Try Again
               </button>
-              <a
+              <Link
                 href="/"
                 className="inline-flex items-center gap-2 h-12 px-6 rounded-sm bg-white border border-neutral-200 text-neutral-800 font-bold tracking-widest uppercase text-[12px] hover:bg-neutral-50 transition-colors w-full sm:w-auto justify-center"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Reload Home
-              </a>
+              </Link>
             </div>
           </div>
         </main>

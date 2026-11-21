@@ -37,7 +37,7 @@ export const ABOUT = {
   images: {
     portrait: "/about/director-minister.jpg",
     portraitAlt: "Director of Ranchi Security Pvt. Ltd., an ex-serviceman",
-    landscape: "/about/guard-training.jpg",
+    landscape: "/hero/F6 (1).jpg",
     landscapeAlt: "Security guards in training formation",
   },
 

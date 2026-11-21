@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { SectionHeader } from "../ui/SectionHeader";
 import { AWARDS } from "@/src/data/awards";
@@ -8,11 +8,58 @@ import { useLightbox, LightboxItem } from "../ui/Lightbox";
 import { ChevronLeft, ChevronRight, Pause, Play, Star } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 
-// Safe looping buffer
+// Safe looping buffer — with 10+ unique awards the arc never shows a repeat,
+// so the source list is used directly to avoid duplicate cards.
 const extendedAwards =
-  AWARDS.length < 16
+  AWARDS.length < 10
     ? [...AWARDS, ...AWARDS, ...AWARDS, ...AWARDS].slice(0, Math.max(16, AWARDS.length * 4))
     : AWARDS;
+
+// Precompute static values that don't change per frame
+const VIEWPORT_BREAKPOINTS = [1280, 1024, 768, 640, 480];
+const CARD_WIDTHS = [260, 240, 230, 220, 210, 210];
+const GAPS = [14, 14, 12, 12, 10, 10];
+
+function getViewportConfig(vW: number) {
+  for (let i = 0; i < VIEWPORT_BREAKPOINTS.length; i++) {
+    if (vW >= VIEWPORT_BREAKPOINTS[i]) {
+      return { w: CARD_WIDTHS[i], gap: GAPS[i] };
+    }
+  }
+  return { w: CARD_WIDTHS[CARD_WIDTHS.length - 1], gap: GAPS[GAPS.length - 1] };
+}
+
+// Precompute anchor positions for each viewport size (cached)
+const anchorCache = new Map<number, number[]>();
+
+function getAnchorPositions(w: number, h: number, gap: number, viewportWidth: number): number[] {
+  const cacheKey = Math.round(w * 100 + h * 10 + gap);
+  if (anchorCache.has(cacheKey)) {
+    return anchorCache.get(cacheKey)!;
+  }
+  
+  const calcExtent = (k: number) => {
+    const absExt = k;
+    const scale = Math.max(0.72, 1 - absExt * 0.07);
+    const tiltY = Math.min(absExt, 2) * -7;
+    const tiltZ = Math.min(absExt, 2.5) * (viewportWidth < 640 ? 2.25 : 3);
+    
+    const radY = Math.abs(tiltY) * Math.PI / 180;
+    const radZ = Math.abs(tiltZ) * Math.PI / 180;
+    
+    const ext = (w * scale * Math.cos(radY) / 2) * Math.cos(radZ) + (h * scale / 2) * Math.sin(radZ);
+    const perspectiveFactor = 1 + (absExt * 0.06);
+    return ext * perspectiveFactor;
+  };
+  
+  const anchorX: number[] = [0];
+  for (let k = 1; k <= 5; k++) {
+    anchorX[k] = anchorX[k - 1] + calcExtent(k - 1) + calcExtent(k) + gap;
+  }
+  
+  anchorCache.set(cacheKey, anchorX);
+  return anchorX;
+}
 
 export function Awards() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,14 +89,20 @@ export function Awards() {
   });
 
   const frameRef = useRef<number | null>(null);
+  const lastRenderTime = useRef(0);
+  const anchorPositionsRef = useRef<number[]>([]);
+  const cardConfigRef = useRef({ w: 0, h: 0, gap: 0 });
 
-  const lightboxItems: LightboxItem[] = extendedAwards.map((a) => ({
-    image: a.image,
-    imageAlt: a.imageAlt,
-    title: a.title,
-    meta: a.year,
-    caption: a.presentedBy,
-  }));
+  const lightboxItems: LightboxItem[] = useMemo(
+    () => extendedAwards.map((a) => ({
+      image: a.image,
+      imageAlt: a.imageAlt,
+      title: a.title,
+      meta: a.year,
+      caption: a.presentedBy,
+    })),
+    []
+  );
 
   const { open: openLightbox, Lightbox } = useLightbox(lightboxItems);
 
@@ -91,7 +144,6 @@ export function Awards() {
         ro.observe(firstCard);
       }
     };
-    // Let layout flush first
     setTimeout(measure, 50);
 
     return () => {
@@ -102,10 +154,16 @@ export function Awards() {
     };
   }, []);
 
-  // 60FPS Arc/Fanning Physics loop
+  // Optimized 60FPS Arc/Fanning Physics loop
   useEffect(() => {
     const loop = (time: number) => {
       frameRef.current = requestAnimationFrame(loop);
+
+      // Throttle to ~60fps max (16.67ms)
+      if (time - lastRenderTime.current < 16) {
+        return;
+      }
+      lastRenderTime.current = time;
 
       if (!isVisibleRef.current) {
         physics.current.lastTime = time;
@@ -133,34 +191,22 @@ export function Awards() {
       const N = extendedAwards.length;
       const vW = viewportRef.current.width;
 
-      const w = cardDimensions.current.w || (vW >= 1280 ? 260 : vW >= 1024 ? 240 : vW >= 768 ? 230 : vW >= 480 ? 220 : 210);
-      const h = cardDimensions.current.h || w * (14 / 9);
-
-      const GAP = vW >= 1024 ? 14 : vW >= 640 ? 12 : 10;
-
-      // Card projected extent calculation
-      const calcExtent = (k: number) => {
-        const absExt = k;
-        // The instruction: anchor values for scale, rotateY, etc. keep the old math
-        const scale = Math.max(0.72, 1 - absExt * 0.07);
-        const tiltY = Math.min(absExt, 2) * -7;
-        // reduce rotateZ from 6 to max 3deg
-        const tiltZ = Math.min(absExt, 2.5) * (vW < 640 ? 2.25 : 3);
-
-        // Use absolute values for calculating width extents properly regardless of sign
-        const radY = Math.abs(tiltY) * Math.PI / 180;
-        const radZ = Math.abs(tiltZ) * Math.PI / 180;
-
-        const ext = (w * scale * Math.cos(radY) / 2) * Math.cos(radZ) + (h * scale / 2) * Math.sin(radZ);
-        const perspectiveFactor = 1 + (absExt * 0.06);
-        return ext * perspectiveFactor;
-      };
-
-      const anchorX: number[] = [0];
-      for (let k = 1; k <= 5; k++) {
-        anchorX[k] = anchorX[k - 1] + calcExtent(k - 1) + calcExtent(k) + GAP;
+      // Get or compute card dimensions
+      const cardW = cardDimensions.current.w;
+      const cardH = cardDimensions.current.h;
+      
+      // Only recalculate config when viewport changes significantly
+      const { w, gap } = getViewportConfig(vW);
+      const h = cardH || w * (14 / 9);
+      
+      if (w !== cardConfigRef.current.w || h !== cardConfigRef.current.h || gap !== cardConfigRef.current.gap) {
+        cardConfigRef.current = { w, h, gap };
+        anchorPositionsRef.current = getAnchorPositions(w, h, gap, vW);
       }
 
+      const anchorX = anchorPositionsRef.current;
+
+      // Batch DOM updates - only update visible cards
       itemsRef.current.forEach((el, i) => {
         if (!el) return;
 
@@ -168,7 +214,7 @@ export function Awards() {
         const abs = Math.abs(offset);
         const sign = offset < 0 ? -1 : 1;
 
-        // Cull distant cards
+        // Cull distant cards - skip style calculations entirely
         if (abs > 4.5) {
           if (el.style.visibility !== "hidden") {
             el.style.visibility = "hidden";
@@ -177,6 +223,7 @@ export function Awards() {
           return;
         }
 
+        // Only compute styles for visible cards
         const k = Math.floor(abs);
         const frac = abs - k;
 
@@ -188,30 +235,28 @@ export function Awards() {
         }
 
         const x = sign * exactX;
-
-        // Gentle downward parabolic dip on lateral cards
         const y = Math.pow(abs, 1.4) * (vW < 640 ? 12 : 22);
-
-        // Subtle 3D Y yaw and organic Z tilt
         const tiltZ = sign * Math.min(abs, 2.5) * (vW < 640 ? 2.25 : 3);
         const tiltY = sign * Math.min(abs, 2) * -7;
         const scale = Math.max(0.72, 1 - abs * 0.07);
-
-        // Soft fading on edges
         const opacity = Math.max(0, 1 - Math.max(0, abs - 1.8) * 0.45);
         const zIndex = Math.round(50 - abs * 10);
-        const visibility = "visible";
         const pointerEvents = abs < 0.6 ? "auto" : "none";
 
-        const cacheKey = `${x.toFixed(1)}_${y.toFixed(1)}_${tiltZ.toFixed(2)}_${tiltY.toFixed(2)}_${scale.toFixed(3)}_${opacity.toFixed(3)}_${zIndex}_${visibility}_${pointerEvents}`;
+        // Simplified cache key - only include values that actually change
+        const cacheKey = `${x.toFixed(1)}|${y.toFixed(1)}|${tiltZ.toFixed(2)}|${tiltY.toFixed(2)}|${scale.toFixed(3)}|${opacity.toFixed(3)}|${zIndex}|${pointerEvents}`;
 
         if (stylesCache.current[i] !== cacheKey) {
           stylesCache.current[i] = cacheKey;
-          el.style.zIndex = zIndex.toString();
-          el.style.opacity = opacity.toFixed(3);
-          el.style.pointerEvents = pointerEvents;
-          if (el.style.visibility !== visibility) el.style.visibility = visibility;
-          el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0px) rotateZ(${tiltZ.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+          
+          // Batch all style changes in one operation
+          el.style.cssText = `
+            z-index: ${zIndex};
+            opacity: ${opacity.toFixed(3)};
+            pointer-events: ${pointerEvents};
+            visibility: visible;
+            transform: translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0px) rotateZ(${tiltZ.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) scale(${scale.toFixed(3)});
+          `;
 
           el.classList.toggle("caption-active", abs < 0.45);
         }
@@ -346,9 +391,12 @@ export function Awards() {
                   src={award.image}
                   alt={award.imageAlt}
                   fill
-                  className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  className="object-contain transition-transform duration-500 ease-out group-hover:scale-105"
                   sizes="(max-width: 640px) 220px, 260px"
                   priority={i < 3}
+                  loading={i < 3 ? undefined : "lazy"}
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Crect width='8' height='8' fill='%231a0406'/%3E%3C/svg%3E"
                 />
                 <div className="absolute inset-x-0 bottom-0 h-[65%] bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
                 <div className="absolute inset-0 rounded-[24px] sm:rounded-[28px] ring-1 ring-inset ring-white/20 pointer-events-none" />
