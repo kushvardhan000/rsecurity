@@ -90,6 +90,13 @@
   .hero-h1 { font-size: clamp(3.15rem, 3.15vw, 4.8rem); }
 }
 
+/* Ultrawide desktops exceed 16:9 at 95svh: any vertical crop must fall at the
+   bottom, never the top. --focal-desk is top-first for every slide, so the
+   heads/faces stay in frame while excess image is trimmed below. */
+@media (min-width: 1281px) {
+  .hero-focal-desk { object-position: var(--focal-desk); }
+}
+
 @theme {
   /* ── Brand red (accent, used sparingly) ───────────────── */
   --color-accent: #A6192E;

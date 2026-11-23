@@ -190,8 +190,8 @@ export function Hero({
             className="object-cover w-full h-full [object-position:var(--focal-mob)] hero-focal-desk"
             style={
               {
-                "--focal-mob": slide.focalMobile || "50% 35%",
-                "--focal-desk": slide.focal || "center 30%",
+                "--focal-mob": slide.focalMobile || "50% top",
+                "--focal-desk": slide.focal || "center top",
               } as React.CSSProperties
             }
             sizes="100vw"
@@ -425,7 +425,7 @@ export function Hero({
                         fill
                         sizes="64px"
                         className="object-cover"
-                        style={{ objectPosition: slide.focal || "center 30%" }}
+                        style={{ objectPosition: slide.focal || "center top" }}
                         loading="lazy"
                       />
                     </div>
