@@ -50,7 +50,7 @@ async function analyzeImages() {
       // Analyze in horizontal bands (top to bottom)
       const bands = 20;
       const bandHeight = h / bands;
-      const bandScores: number[] = [];
+      const bandScores: { band: number; yPercent: string; variance: string; brightness: string }[] = [];
       
       for (let b = 0; b < bands; b++) {
         const yStart = Math.floor(b * bandHeight);
