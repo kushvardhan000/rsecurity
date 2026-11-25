@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Eye, ShieldCheck } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -160,21 +160,46 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
 
   const handleImageError = (id: string) => {
     setFailedImages((prev) => ({ ...prev, [id]: true }));
   };
 
-  const scrollByAmount = (direction: number) => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: direction * 380, behavior: "smooth" });
-    }
-  };
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollPrev(scrollLeft > 8);
+    setCanScrollNext(scrollLeft < scrollWidth - clientWidth - 8);
+  }, []);
+
+  const scrollByAmount = useCallback((direction: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const card = el.querySelector('[role="button"]') as HTMLElement | null;
+    const gap = parseInt(getComputedStyle(el).gap) || 4;
+    const step = card ? card.offsetWidth + gap : 300;
+    el.scrollBy({ left: direction * step, behavior: "smooth" });
+  }, []);
 
   const navigateLightbox = (dir: number) => {
     if (openIndex === null) return;
     setOpenIndex((openIndex + dir + memberships.length) % memberships.length);
   };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    updateScrollState();
+    return () => el.removeEventListener("scroll", updateScrollState);
+  }, [updateScrollState]);
+
+  useEffect(() => {
+    updateScrollState();
+  }, [memberships.length, updateScrollState]);
 
   return (
     <section
@@ -194,26 +219,6 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
               Memberships & <span className="text-[#540B13] italic font-normal">affiliations.</span>
             </h2>
           </div>
-
-          {/* Desktop Arrow Controls */}
-          {memberships.length > 4 && (
-            <div className="hidden sm:flex items-center gap-2">
-              <button
-                onClick={() => scrollByAmount(-1)}
-                className="h-10 w-10 grid place-items-center rounded-md border border-neutral-300 bg-white text-neutral-700 hover:border-[#540B13] hover:text-[#540B13] transition-colors shadow-2xs cursor-pointer active:scale-95"
-                aria-label="Scroll certificates left"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => scrollByAmount(1)}
-                className="h-10 w-10 grid place-items-center rounded-md border border-neutral-300 bg-white text-neutral-700 hover:border-[#540B13] hover:text-[#540B13] transition-colors shadow-2xs cursor-pointer active:scale-95"
-                aria-label="Scroll certificates right"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
         </div>
 
         {/* ── Certificates Gallery ── */}
@@ -264,10 +269,10 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
                     )}
 
                     {/* Hover Inspect Overlay */}
-                    <div className="absolute inset-0 bg-[#540B13]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-2xs">
+                    <div className="absolute inset-0 bg-[#540B13]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-2xs">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/95 rounded-full text-xs font-mono font-bold text-[#540B13] uppercase tracking-wider shadow-md">
                         <Eye className="w-3.5 h-3.5" />
-                        Inspect
+                        Click to View
                       </span>
                     </div>
                   </div>
@@ -285,6 +290,38 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
               </div>
             ))}
           </div>
+
+          {/* Carousel Arrow Navigation */}
+          {memberships.length > 1 && (
+            <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 pointer-events-none z-20">
+              <button
+                onClick={() => scrollByAmount(-1)}
+                disabled={!canScrollPrev}
+                aria-label="Scroll certificates left"
+                className={cn(
+                  "pointer-events-auto self-center z-30 h-10 w-10 grid place-items-center rounded-full border border-neutral-300 bg-white text-neutral-700 shadow-sm transition-colors transition-transform",
+                  !canScrollPrev
+                    ? "opacity-40 cursor-not-allowed border-neutral-200 text-neutral-400"
+                    : "hover:border-[#540B13] hover:text-[#540B13] hover:shadow-md active:scale-95"
+                )}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => scrollByAmount(1)}
+                disabled={!canScrollNext}
+                aria-label="Scroll certificates right"
+                className={cn(
+                  "pointer-events-auto self-center z-30 h-10 w-10 grid place-items-center rounded-full border border-neutral-300 bg-white text-neutral-700 shadow-sm transition-colors transition-transform",
+                  !canScrollNext
+                    ? "opacity-40 cursor-not-allowed border-neutral-200 text-neutral-400"
+                    : "hover:border-[#540B13] hover:text-[#540B13] hover:shadow-md active:scale-95"
+                )}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── Seamless Accredited Association Logos Strip ── */}
