@@ -343,7 +343,7 @@ export function CTA() {
                       onChange={handleChange}
                       rows={3}
                       className={cn(
-                        "w-full min-h-[105px] resize-y rounded-md border px-3 py-2 text-sm bg-white text-neutral-800 placeholder-neutral-400 transition-colors focus:outline-none focus:ring-1 focus:ring-[#800020] focus:border-[#800020]",
+                        "w-full min-h-[105px]  resize-none rounded-md border px-3 py-2 text-sm bg-white text-neutral-800 placeholder-neutral-400 transition-colors focus:outline-none focus:ring-1 focus:ring-[#800020] focus:border-[#800020]",
                         errors.message ? "border-[#800020]" : "border-neutral-300 hover:border-neutral-400"
                       )}
                       placeholder="Briefly describe your site, shift timing, or deployment scale..."
