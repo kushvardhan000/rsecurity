@@ -181,32 +181,47 @@ export function Navbar() {
 
   const solid = scrolled || tone === "light";
 
-  /* ── Active section via IntersectionObserver ────── */
+  /* ── Active section via scroll position ────────── */
 
-  useEffect(() => {
-    if (pathname !== "/") {
-      setActive(pathname.slice(1).split("/")[0]);
-      return;
-    }
-    const ids = NAV_LINKS.map((l) => l.href.slice(1)).filter(Boolean);
-    const sections = ids
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
+useEffect(() => {
+  if (pathname !== "/") {
+    setActive(pathname.slice(1).split("/")[0]);
+    return;
+  }
 
-    if (!sections.length) return;
+  const ids = NAV_LINKS.map((l) => l.href.slice(1)).filter(Boolean);
+  let raf = 0;
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) setActive(e.target.id);
+  const update = () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const line = window.innerHeight * 0.3;
+      let current = ""; // "" = Home / hero
+      let bestTop = -Infinity;
+
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const top = el.getBoundingClientRect().top;
+        // the section closest to (but not below) the line wins
+        if (top <= line && top > bestTop) {
+          bestTop = top;
+          current = id;
         }
-      },
-      { rootMargin: "-30% 0px -60% 0px" }
-    );
+      }
+      setActive(current);
+    });
+  };
 
-    sections.forEach((s) => io.observe(s));
-    return () => io.disconnect();
-  }, [pathname]);
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update, { passive: true });
+  return () => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener("scroll", update);
+    window.removeEventListener("resize", update);
+  };
+}, [pathname]);
 
   /* ── Close on route change ─────────────────────── */
 
