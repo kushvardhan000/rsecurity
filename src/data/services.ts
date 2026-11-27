@@ -17,51 +17,39 @@ export type AlsoService = {
 export const FEATURED_SERVICES: FeaturedService[] = [
   {
     slug: "industrial",
-    title: "Industrial Security",
-    short: "Protection of industrial installations, utilities, materials and classified information against loss and damage.",
-    long: "Protection of industrial installations, resources, utilities, materials and classified information essential to prevent loss or damage.",
+    title: "Security Services",
+    short:
+      "Dependable security solutions for industrial, corporate, government, and PSU clients, backed by strict compliance standards and disciplined personnel.",
+    long:
+      "We provide dependable security solutions for industrial installations, corporate establishments, government bodies, and Public Sector Undertakings (PSUs). Our services are backed by strict compliance standards, professionally trained personnel, and disciplined security practices to ensure the protection of people, property, infrastructure, and valuable resources.",
     image: "/services/industrial.jpg",
     focal: "center center",
     tag: "01",
+    todo: false,
   },
   {
-    slug: "mining",
-    title: "Mining Security",
-    short: "Access control, visitor and contractor accountability, and patrol vehicles for large mine sites. Reduces pilferage and keeps teams safe.",
-    long: "Security, access control and accountability are fundamental to a safe environment for employees, contractors and visitors at mine sites. Our controlled measures cover employee, contractor and visitor management and emergency evacuation accountability. RSP deploys professionally trained mine security guards and site-compliant patrol and high-speed patrol vehicles to supervise vast regional sites and reduce pilferage.",
+    slug: "manpower",
+    title: "Manpower Supply",
+    short:
+      "Reliable workforce supply tailored to the operational needs of government bodies, PSUs, and commercial enterprises.",
+    long:
+      "We provide reliable and professionally managed manpower solutions tailored to the operational requirements of government bodies, Public Sector Undertakings (PSUs), and commercial enterprises. Our workforce deployment focuses on organizational requirements, operational efficiency, and dependable personnel to support diverse business and institutional operations.",
     image: "/services/mining.jpg",
     focal: "center center",
     tag: "02",
+    todo: false,
   },
   {
-    slug: "escort",
-    title: "Escort Security",
-    short: "Trained escort teams for valuables, personnel and goods in transit.",
-    long: "Armoured and dignitary escort for VIPs, cash and valuables — every movement planned route-by-route with vetted, licensed personnel.",
-    image: "/services/escort.jpg",
-    focal: "center center",
-    tag: "03",
-    todo: true,
-  },
-  {
-    slug: "institutional",
-    title: "Institutional Security",
-    short: "Disciplined guarding for campuses, hospitals and offices, with visitor management and emergency response.",
-    long: "Guard placement for schools, colleges, hospitals, government offices and PSU premises, with access control and visitor management.",
+    slug: "training",
+    title: "Training and Certification",
+    short:
+      "Accredited Skill Training Centres since 2012, developing skilled professionals under NSQF through MEPSC and NSDC.",
+    long:
+      "Since 2012, our Skill Training Centres have been accredited by the Management & Entrepreneurship and Professional Skills Council (MEPSC) and the National Skill Development Corporation (NSDC), under the Ministry of Skill Development and Entrepreneurship, Government of India. We train young men and women under the National Skill Qualification Framework (NSQF), equipping them with professional skills and industry-relevant competencies to elevate professionalism across the security and services sector.",
     image: "/services/institutional.jpg",
     focal: "center center",
-    tag: "04",
-    todo: true,
-  },
-  {
-    slug: "event",
-    title: "Event Security",
-    short: "Crowd, access and VIP management for conferences, weddings and public events.",
-    long: "Crowd control, entry screening and perimeter security for weddings, conferences, exhibitions and public events of any scale.",
-    image: "/services/event.jpg",
-    focal: "center center",
-    tag: "05",
-    todo: true,
+    tag: "03",
+    todo: false,
   },
 ] as const;
 

@@ -619,6 +619,18 @@ export function Services() {
     );
   }
 
+  const count = FEATURED_SERVICES.length;
+const safeActiveIdx = count > 0 ? ((activeIdx % count) + count) % count : 0;
+const halfSpan = Math.floor(count / 2);
+
+const getShortestStep = (targetIndex: number, currentIndex: number) => {
+  if (count <= 1) return 0;
+  let diff = (targetIndex - currentIndex) % count;
+  if (diff > halfSpan) diff -= count;
+  if (diff < -halfSpan) diff += count;
+  return diff;
+};
+
   return (
     <section
       ref={sectionRef}
@@ -649,347 +661,371 @@ export function Services() {
         </div>
 
         {/* ── DESKTOP: Dynamic Expanding Dossier Deck (>= 1024px) ── */}
-        <div
-          ref={deckRef}
-          role="tablist"
-          aria-label="Deployment Divisions"
-          className="hidden lg:grid gap-[12px] h-[420px] w-full"
-          style={{
-            gridTemplateColumns: FEATURED_SERVICES.map((_, i) => (i === activeIdx ? "5fr" : "1fr")).join(" "),
-            transition: "grid-template-columns 700ms cubic-bezier(0.22, 1, 0.36, 1)",
-            "--open-w": openWidth ? `${openWidth}px` : "600px",
-          } as React.CSSProperties}
-        >
-          {FEATURED_SERVICES.map((service, i) => {
-            const isActive = activeIdx === i;
-            return (
-              <button
-                key={service.slug}
-                ref={(el) => {
-                  tabButtonsRef.current[i] = el;
-                }}
-                type="button"
-                role="tab"
-                id={`division-tab-${service.slug}`}
-                aria-selected={isActive}
-                aria-controls={`division-panel-${service.slug}`}
-                tabIndex={isActive ? 0 : -1}
-                onClick={() => {
-                  if (!isActive) {
-                    handleManualSelect(i);
-                  }
-                }}
-                onKeyDown={(e) => handleTabKeyDown(e, i)}
-                className={cn(
-                  "group relative rounded-xl overflow-hidden cursor-pointer select-none text-left p-0 border-0 bg-transparent outline-none transition-[box-shadow,ring,opacity] duration-500",
-                  "focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none focus:outline-none z-10 focus-visible:z-20",
-                  isActive
-                    ? "shadow-xl ring-2 ring-[#540B13] opacity-100"
-                    : "opacity-80 [@media(hover:hover)_and_(pointer:fine)]:hover:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:hover:duration-150"
-                )}
-              >
-                {/* Photo Layer */}
-                <div
-                  className="absolute inset-y-0 pointer-events-none"
-                  style={{
-                    width: "var(--open-w)",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
-                  <Image
-                    src={service.image}
-                    alt={service.title}
-                    fill
-                    className={cn(
-                      "object-cover transition-[transform,filter] ease-out",
-                      isActive
-                        ? "scale-105 brightness-100 duration-500"
-                        : "scale-100 brightness-[0.65] duration-500 [@media(hover:hover)_and_(pointer:fine)]:group-hover:brightness-[0.80] [@media(hover:hover)_and_(pointer:fine)]:group-hover:duration-150"
-                    )}
-                    style={{ objectPosition: service.focal || "center" }}
-                  />
-                </div>
-
-                {/* Tactical Scrim / Gradients */}
-                <div
-                  className={cn(
-                    "absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/20 pointer-events-none transition-opacity",
-                    isActive
-                      ? "opacity-0 duration-500"
-                      : "opacity-100 duration-500 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-80 [@media(hover:hover)_and_(pointer:fine)]:group-hover:duration-150"
-                  )}
-                />
-                <div
-                  className={cn(
-                    "absolute inset-0 bg-gradient-to-t from-[#260307]/95 via-[#540B13]/40 to-black/20 transition-opacity duration-500 pointer-events-none",
-                    isActive ? "opacity-100" : "opacity-0"
-                  )}
-                />
-
-                {/* Top Badge: Code Tag */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
-                  <span
-                    className={cn(
-                      "text-[11px] font-mono font-semibold px-2 py-0.5 rounded backdrop-blur-md transition-colors duration-300 pointer-events-auto",
-                      isActive
-                        ? "bg-white text-[#540B13]"
-                        : "bg-black/50 text-white/80 border border-white/10"
-                    )}
-                  >
-                    {service.tag || `DIV-0${i + 1}`}
-                  </span>
-                  <span
-                    className={cn(
-                      "flex items-center gap-1 text-[10px] font-mono text-white/80 bg-white/10 px-2.5 py-0.5 rounded-full backdrop-blur-md border border-white/10 pointer-events-auto transition-opacity duration-300",
-                      isActive ? "opacity-100" : "opacity-0 pointer-events-none"
-                    )}
-                  >
-                    <Radio className="w-2.5 h-2.5 animate-pulse text-white/80" />
-                    DEPLOYED
-                  </span>
-                </div>
-
-                {/* Collapsed Title (fades out in 200ms when card opens) */}
-                <div
-                  className={cn(
-                    "absolute bottom-5 left-5 right-5 z-10 pointer-events-none transition-opacity duration-200 ease-out",
-                    isActive ? "opacity-0" : "opacity-100 delay-200"
-                  )}
-                >
-                  <h3 className="font-serif font-bold text-base text-white/90 leading-tight">
-                    {service.title}
-                  </h3>
-                </div>
-
-                {/* Active Content Wrapper (width: var(--open-w), fades in and rises 12px over 450ms with a 250ms delay) */}
-                <div
-                  id={`division-panel-${service.slug}`}
-                  role="tabpanel"
-                  aria-labelledby={`division-tab-${service.slug}`}
-                  className={cn(
-                    "absolute bottom-0 left-0 p-5 z-10 text-white pointer-events-none",
-                    isActive
-                      ? "opacity-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 translate-y-[12px]"
-                  )}
-                  style={{
-                    width: "var(--open-w)",
-                    transitionProperty: "opacity, transform",
-                    transitionDuration: isActive ? "450ms" : "200ms",
-                    transitionDelay: isActive ? "250ms" : "0ms",
-                    transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
-                  }}
-                >
-                  <h3 className="font-serif font-bold text-2xl text-white mb-2 leading-tight">
-                    {service.title}
-                  </h3>
-
-                  <p className="text-xs text-neutral-200 line-clamp-2 font-sans leading-relaxed mb-3 max-w-lg">
-                    {service.short} Ex-servicemen led perimeter protection and strict verification.
-                  </p>
-
-                  <a
-                    href="#contact"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white hover:underline transition-colors pointer-events-auto"
-                  >
-                    Book Unit Assessment
-                    <ArrowUpRight className="w-3.5 h-3.5 text-[#F2B8BF]" />
-                  </a>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── PHONE + TABLET (< 1024px): Infinite Pop-Up Coverflow Carousel ── */}
-        <div className="lg:hidden">
-          {/* Stage: full-bleed with overflow-x: clip */}
-          <div
-            ref={stageRef}
-            role="region"
-            aria-label="Featured Services Carousel"
-            tabIndex={0}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerCancel}
-            onClickCapture={handleStageClickCapture}
-            className="relative -mx-4 sm:-mx-6 w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)] px-0 overflow-x-clip touch-pan-y select-none outline-none h-[calc(min(72vw,340px)*4/3+32px)] sm:h-[calc(min(52vw,380px)*4/3+32px)]"
-            style={
-              {
-                "--card-w": "min(72vw, 340px)",
-                "--card-h": "calc(min(72vw, 340px) * 4 / 3)",
-              } as React.CSSProperties
+       {/* ── DESKTOP / LAPTOP / ULTRAWIDE / 4K (>= 1024px) ── */}
+<div
+  ref={deckRef}
+  role="tablist"
+  aria-label="Deployment Divisions"
+  className="hidden lg:flex gap-3 h-[420px] xl:h-[460px] 2xl:h-[500px] w-full"
+  style={
+    {
+      "--open-w": `${Math.round(openWidth)}px`,
+    } as React.CSSProperties
+  }
+>
+  {FEATURED_SERVICES.map((service, i) => {
+    const isActive = safeActiveIdx === i;
+    return (
+      <div
+        key={service.slug}
+        className={cn(
+          "group relative rounded-2xl overflow-hidden select-none min-w-0",
+          "transition-[flex-grow,box-shadow,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[flex-grow]",
+          isActive
+            ? "shadow-xl ring-2 ring-[#540B13] opacity-100 z-10"
+            : "opacity-85 hover:opacity-100"
+        )}
+        style={{
+          flexGrow: isActive ? 5 : 1,
+          flexShrink: 1,
+          flexBasis: FEATURED_SERVICES.length > 4 ? "64px" : "88px",
+        }}
+      >
+        <button
+          ref={(el) => {
+            tabButtonsRef.current[i] = el;
+          }}
+          type="button"
+          role="tab"
+          id={`division-tab-${service.slug}`}
+          aria-selected={isActive}
+          aria-controls={`division-panel-${service.slug}`}
+          tabIndex={isActive ? 0 : -1}
+          onClick={() => {
+            if (!isActive) {
+              handleManualSelect(i);
             }
+          }}
+          onKeyDown={(e) => handleTabKeyDown(e, i)}
+          className="absolute inset-0 w-full h-full text-left p-0 border-0 bg-transparent cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:z-20"
+        >
+          {/* Photo Layer */}
+          <div
+            className="absolute inset-y-0 pointer-events-none will-change-transform"
+            style={{
+              width: "var(--open-w)",
+              left: "50%",
+              transform: "translate3d(-50%, 0, 0)",
+            }}
           >
-            {/* 5 Cards */}
-            {FEATURED_SERVICES.map((service, i) => {
-              return (
-                <div
-                  key={service.slug}
-                  ref={(el) => {
-                    cardRefs.current[i] = el;
-                  }}
-                  onClick={(e) => {
-                    if (swallowClickRef.current) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      return;
-                    }
-                    const d = wrap(i - posRef.current);
-                    if (Math.abs(d) >= 0.3) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const step = Math.round(d);
-                      targetRef.current = Math.round(posRef.current) + step;
-                      startAnimation();
-                      scheduleNext();
-                    } else {
-                      scheduleNext();
-                    }
-                  }}
-                  className="absolute top-4 left-1/2 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl border border-white/10 will-change-[transform,opacity] select-none cursor-pointer"
-                  style={{
-                    width: "var(--card-w, min(72vw, 340px))",
-                    height: "var(--card-h, calc(min(72vw, 340px) * 4 / 3))",
-                    marginLeft: "calc(-1 * var(--card-w, min(72vw, 340px)) / 2)",
-                  }}
-                >
-                  {/* Photo Layer */}
-                  <Image
-                    src={service.image}
-                    alt={service.title}
-                    fill
-                    className="object-cover pointer-events-none"
-                    style={{ objectPosition: service.focal || "center" }}
-                    sizes="(max-width: 640px) 340px, 380px"
-                  />
-
-                  {/* Tactical Scrim / Gradients */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#200306]/95 via-black/40 to-black/20 pointer-events-none" />
-
-                  {/* Top Badge: Number and Tag */}
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
-                    <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-black/60 text-white/90 border border-white/10 backdrop-blur-md pointer-events-auto">
-                      {service.tag || `0${i + 1}`}
-                    </span>
-                    <span className="flex items-center gap-1 text-[10px] font-mono text-white/80 bg-white/10 px-2 py-0.5 rounded-full backdrop-blur-md border border-white/10 pointer-events-auto">
-                      <Radio className="w-2.5 h-2.5 animate-pulse text-white/80" />
-                      DEPLOYED
-                    </span>
-                  </div>
-
-                  {/* Bottom Content Area */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 z-10 text-white pointer-events-auto">
-                    {/* Title: Always visible on all cards (neighbours show only number and title) */}
-                    <h3 className="font-serif font-bold text-lg sm:text-xl text-white leading-tight">
-                      {service.title}
-                    </h3>
-
-                    {/* Active-only details: description and link fade in (250ms, 150ms delay) only when |d| < 0.3 */}
-                    <div
-                      ref={(el) => {
-                        detailsRefs.current[i] = el;
-                      }}
-                      style={{
-                        opacity: i === 0 ? 1 : 0,
-                        pointerEvents: i === 0 ? "auto" : "none",
-                      }}
-                    >
-                      <p className="text-xs text-neutral-200 line-clamp-2 font-sans leading-relaxed mt-1.5">
-                        {service.short} Ex-servicemen led perimeter protection and strict verification.
-                      </p>
-
-                      <a
-                        href="#contact"
-                        onClick={(e) => {
-                          if (swallowClickRef.current) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return;
-                          }
-                          e.stopPropagation();
-                        }}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white hover:underline mt-2.5 pointer-events-auto"
-                      >
-                        Book Unit Assessment
-                        <ArrowUpRight className="w-3.5 h-3.5 text-[#F2B8BF]" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* ARROW BUTTONS: 40px circles with 44px hit area at left: 6px and right: 6px of stage */}
-            <button
-              type="button"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => {
-                targetRef.current -= 1;
-                startAnimation();
-                scheduleNext();
-              }}
-              aria-label="Previous service"
-              className="absolute left-[6px] top-1/2 -translate-y-1/2 z-40 flex items-center justify-center w-10 h-10 rounded-full bg-[#3D0A12]/90 text-white ring-1 ring-white/20 transition-all duration-150 hover:bg-[#4D0D17] hover:brightness-110 active:scale-[0.94] focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer after:absolute after:-inset-[2px] after:content-['']"
-            >
-              <ChevronLeft className="w-5 h-5 text-white" />
-            </button>
-
-            <button
-              type="button"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => {
-                targetRef.current += 1;
-                startAnimation();
-                scheduleNext();
-              }}
-              aria-label="Next service"
-              className="absolute right-[6px] top-1/2 -translate-y-1/2 z-40 flex items-center justify-center w-10 h-10 rounded-full bg-[#3D0A12]/90 text-white ring-1 ring-white/20 transition-all duration-150 hover:bg-[#4D0D17] hover:brightness-110 active:scale-[0.94] focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer after:absolute after:-inset-[2px] after:content-['']"
-            >
-              <ChevronRight className="w-5 h-5 text-white" />
-            </button>
+            <Image
+              src={service.image}
+              alt={service.title}
+              fill
+              priority={i === 0}
+              sizes="(min-width: 1536px) 860px, (min-width: 1280px) 720px, 560px"
+              className={cn(
+                "object-cover transition-transform duration-500 ease-out will-change-transform",
+                isActive ? "scale-[1.03]" : "scale-100 group-hover:scale-[1.015]"
+              )}
+              style={{ objectPosition: service.focal || "center" }}
+            />
           </div>
 
-          {/* Below stage: 5 static dots (6px; active one is 18px maroon pill) */}
+          {/* Scrim Layers */}
           <div
-            className="flex items-center justify-center gap-2 mt-4"
-            role="tablist"
-            aria-label="Services Pagination"
+            className={cn(
+              "absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/20 pointer-events-none transition-opacity duration-300",
+              isActive ? "opacity-0" : "opacity-100 group-hover:opacity-75"
+            )}
+          />
+          <div
+            className={cn(
+              "absolute inset-0 bg-gradient-to-t from-[#260307]/95 via-[#540B13]/45 to-black/20 pointer-events-none transition-opacity duration-500",
+              isActive ? "opacity-100" : "opacity-0"
+            )}
+          />
+
+          {/* Top Badges */}
+          <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-10 pointer-events-none">
+            <span
+              className={cn(
+                "text-[11px] font-mono font-semibold px-2 py-0.5 rounded transition-colors duration-300",
+                isActive
+                  ? "bg-white text-[#540B13]"
+                  : "bg-black/65 text-white/90 border border-white/15"
+              )}
+            >
+              {service.tag || `DIV-${String(i + 1).padStart(2, "0")}`}
+            </span>
+            <span
+              className={cn(
+                "flex items-center gap-1 text-[10px] font-mono text-white/90 bg-black/45 px-2.5 py-0.5 rounded-full border border-white/15 transition-opacity duration-300",
+                isActive ? "opacity-100" : "opacity-0"
+              )}
+            >
+              <Radio className="w-2.5 h-2.5 text-[#F2B8BF]" />
+              DEPLOYED
+            </span>
+          </div>
+
+          {/* Collapsed Title */}
+          <div
+            className={cn(
+              "absolute bottom-5 left-4 right-4 z-10 pointer-events-none transition-opacity duration-200",
+              isActive ? "opacity-0" : "opacity-100 delay-150"
+            )}
           >
-            {FEATURED_SERVICES.map((service, i) => {
-              const isActive = activeIdx === i;
-              return (
-                <button
-                  key={service.slug}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  aria-label={`Go to ${service.title}`}
-                  onClick={() => {
-                    const currentActive = (((Math.round(posRef.current) % 5) + 5) % 5);
-                    let diff = i - currentActive;
-                    if (diff > 2) diff -= 5;
-                    if (diff < -2) diff += 5;
-                    targetRef.current = Math.round(posRef.current) + diff;
-                    startAnimation();
-                    scheduleNext();
-                  }}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-300 cursor-pointer p-0 border-0 outline-none focus-visible:ring-2 focus-visible:ring-[#3D0A12]",
-                    isActive
-                      ? "w-[18px] bg-[#3D0A12]"
-                      : "w-1.5 bg-[#3D0A12]/25 hover:bg-[#3D0A12]/40"
-                  )}
-                />
-              );
-            })}
+            <h3 className="font-serif font-bold text-base text-white/95 leading-tight truncate">
+              {service.title}
+            </h3>
+          </div>
+        </button>
+
+        {/* Active Panel Content */}
+        <div
+          id={`division-panel-${service.slug}`}
+          role="region"
+          aria-labelledby={`division-tab-${service.slug}`}
+          className={cn(
+            "absolute bottom-0 left-0 p-5 z-10 text-white max-w-full will-change-[transform,opacity]",
+            isActive
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 translate-y-2.5 pointer-events-none"
+          )}
+          style={{
+            width: "var(--open-w)",
+            transitionProperty: "opacity, transform",
+            transitionDuration: isActive ? "400ms" : "180ms",
+            transitionDelay: isActive ? "160ms" : "0ms",
+            transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+          }}
+        >
+          <h3 className="font-serif font-bold text-2xl text-white mb-2 leading-tight">
+            {service.title}
+          </h3>
+
+          <p className="text-xs sm:text-sm text-neutral-200 line-clamp-2 font-sans leading-relaxed mb-3 max-w-lg">
+            {service.short} Ex-servicemen led perimeter protection and strict verification.
+          </p>
+
+          <a
+            href="#contact"
+            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white hover:underline transition-colors"
+          >
+            Book Unit Assessment
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#F2B8BF]" />
+          </a>
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+{/* ── PHONE + TABLET (< 1024px): Infinite Coverflow Carousel ── */}
+<div className="lg:hidden w-full overflow-x-clip">
+  <div
+    ref={stageRef}
+    role="region"
+    aria-roledescription="carousel"
+    aria-label="Featured Services Carousel"
+    tabIndex={0}
+    onKeyDown={(e) => {
+      if (count <= 1) return;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        targetRef.current = Math.round(targetRef.current) - 1;
+        startAnimation();
+        scheduleNext();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        targetRef.current = Math.round(targetRef.current) + 1;
+        startAnimation();
+        scheduleNext();
+      }
+    }}
+    onPointerDown={handlePointerDown}
+    onPointerMove={handlePointerMove}
+    onPointerUp={handlePointerUp}
+    onPointerCancel={handlePointerCancel}
+    onClickCapture={handleStageClickCapture}
+    className={cn(
+      "relative w-full overflow-hidden touch-pan-y select-none outline-none",
+      "h-[calc(min(72vw,340px)*4/3+32px)] sm:h-[calc(min(52vw,380px)*4/3+32px)]",
+      "focus-visible:ring-2 focus-visible:ring-[#3D0A12] rounded-2xl"
+    )}
+    style={
+      {
+        "--card-w": "min(72vw, 340px)",
+        "--card-h": "calc(min(72vw, 340px) * 4 / 3)",
+        transform: "translate3d(0, 0, 0)",
+      } as React.CSSProperties
+    }
+  >
+    {FEATURED_SERVICES.map((service, i) => (
+      <div
+        key={service.slug}
+        ref={(el) => {
+          cardRefs.current[i] = el;
+        }}
+        onClick={(e) => {
+          if (swallowClickRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          if (count <= 1) return;
+          const d = wrap(i - posRef.current);
+          if (Math.abs(d) >= 0.25) {
+            e.preventDefault();
+            e.stopPropagation();
+            targetRef.current = Math.round(posRef.current) + Math.round(d);
+            startAnimation();
+            scheduleNext();
+          } else {
+            scheduleNext();
+          }
+        }}
+        className="absolute top-3 left-1/2 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl border border-white/10 will-change-transform select-none cursor-pointer"
+        style={{
+          width: "var(--card-w)",
+          height: "var(--card-h)",
+          marginLeft: "calc(-1 * var(--card-w) / 2)",
+          transform:
+            i === safeActiveIdx
+              ? "translate3d(0px, 0px, 0px) scale(1)"
+              : `translate3d(${wrap(i - safeActiveIdx) * 220}px, 14px, 0px) scale(0.86)`,
+          opacity: i === safeActiveIdx ? 1 : Math.abs(wrap(i - safeActiveIdx)) <= 1 ? 0.65 : 0,
+          zIndex: i === safeActiveIdx ? 30 : 20 - Math.abs(wrap(i - safeActiveIdx)),
+        }}
+      >
+        <Image
+          src={service.image}
+          alt={service.title}
+          fill
+          priority={i === 0}
+          className="object-cover pointer-events-none"
+          style={{ objectPosition: service.focal || "center" }}
+          sizes="(max-width: 640px) 72vw, 380px"
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-[#200306]/95 via-black/40 to-black/20 pointer-events-none" />
+
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10 pointer-events-none">
+          <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-black/65 text-white/95 border border-white/15">
+            {service.tag || String(i + 1).padStart(2, "0")}
+          </span>
+          <span className="flex items-center gap-1 text-[10px] font-mono text-white/90 bg-black/45 px-2 py-0.5 rounded-full border border-white/15">
+            <Radio className="w-2.5 h-2.5 text-[#F2B8BF]" />
+            DEPLOYED
+          </span>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 z-10 text-white">
+          <h3 className="font-serif font-bold text-lg sm:text-xl text-white leading-tight">
+            {service.title}
+          </h3>
+
+          <div
+            ref={(el) => {
+              detailsRefs.current[i] = el;
+            }}
+            style={{
+              opacity: i === safeActiveIdx ? 1 : 0,
+              pointerEvents: i === safeActiveIdx ? "auto" : "none",
+            }}
+          >
+            <p className="text-xs text-neutral-200 line-clamp-2 font-sans leading-relaxed mt-1.5">
+              {service.short} Ex-servicemen led perimeter protection and strict verification.
+            </p>
+
+            <a
+              href="#contact"
+              onClick={(e) => {
+                if (swallowClickRef.current) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return;
+                }
+                e.stopPropagation();
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white hover:underline mt-2.5"
+            >
+              Book Unit Assessment
+              <ArrowUpRight className="w-3.5 h-3.5 text-[#F2B8BF]" />
+            </a>
           </div>
         </div>
+      </div>
+    ))}
+
+    {count > 1 && (
+      <>
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => {
+            targetRef.current = Math.round(targetRef.current) - 1;
+            startAnimation();
+            scheduleNext();
+          }}
+          aria-label="Previous service"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-40 flex items-center justify-center w-10 h-10 rounded-full bg-[#3D0A12]/90 text-white ring-1 ring-white/20 transition-transform duration-150 hover:bg-[#4D0D17] active:scale-95 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer"
+        >
+          <ChevronLeft className="w-5 h-5 text-white" />
+        </button>
+
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => {
+            targetRef.current = Math.round(targetRef.current) + 1;
+            startAnimation();
+            scheduleNext();
+          }}
+          aria-label="Next service"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-40 flex items-center justify-center w-10 h-10 rounded-full bg-[#3D0A12]/90 text-white ring-1 ring-white/20 transition-transform duration-150 hover:bg-[#4D0D17] active:scale-95 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer"
+        >
+          <ChevronRight className="w-5 h-5 text-white" />
+        </button>
+      </>
+    )}
+  </div>
+
+  {count > 1 && (
+    <div
+      className="flex items-center justify-center gap-2 mt-4"
+      role="tablist"
+      aria-label="Services Pagination"
+    >
+      {FEATURED_SERVICES.map((service, i) => {
+        const isDotActive = safeActiveIdx === i;
+        return (
+          <button
+            key={service.slug}
+            type="button"
+            role="tab"
+            aria-selected={isDotActive}
+            aria-label={`Go to ${service.title}`}
+            onClick={() => {
+              const currentActive = (((Math.round(posRef.current) % count) + count) % count);
+              const diff = getShortestStep(i, currentActive);
+              targetRef.current = Math.round(posRef.current) + diff;
+              startAnimation();
+              scheduleNext();
+            }}
+            className={cn(
+              "h-1.5 rounded-full transition-all duration-300 cursor-pointer p-0 border-0 outline-none focus-visible:ring-2 focus-visible:ring-[#3D0A12]",
+              isDotActive
+                ? "w-[18px] bg-[#3D0A12]"
+                : "w-1.5 bg-[#3D0A12]/25 hover:bg-[#3D0A12]/40"
+            )}
+          />
+        );
+      })}
+    </div>
+  )}
+</div>
 
         {/* ── Compact "Also" Strip ── */}
         <Reveal delay={0.1} className="mt-8 pt-6 border-t border-neutral-200/80">

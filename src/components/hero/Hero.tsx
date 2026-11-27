@@ -325,11 +325,10 @@ export function Hero({
               className="text-white font-bold hero-h1 text-[clamp(1.15rem,6vw,1.45rem)] leading-[1.18] tracking-tight mb-2 line-clamp-3"
               style={{ fontFamily: "'Newsreader', serif" }}
             >
-              Security built on{" "}
+              Trusted Security & Manpower Solutions {" "}
               <em className="not-italic text-[#FF8595] italic font-normal">
-                discipline
-              </em>
-              , delivered by ex-servicemen.
+                Since 1995
+              </em>.
             </h1>
 
             {/* Subtext (Hidden below 640px in overlay mode) */}
@@ -337,8 +336,7 @@ export function Hero({
               className="hidden hero-p text-[16px] leading-relaxed text-white/90 font-normal max-w-[480px]"
               style={{ fontFamily: "'Inter', sans-serif" }}
             >
-              Guarding industry, mines and institutions across Jharkhand, Bihar and
-              Odisha — backed by over 25,000 certified personnel.
+              A pioneer in Jharkhand’s private security industry — an Ex-Servicemen enterprise, ISO 9001:2015 certified, and committed to quality, training, and compliance.
             </p>
           </div>
         </div>
@@ -356,11 +354,10 @@ export function Hero({
               className="text-white font-bold text-[clamp(1.15rem,6vw,1.45rem)] leading-[1.18] tracking-tight mb-1.5 line-clamp-3"
               style={{ fontFamily: "'Newsreader', serif" }}
             >
-              Security built on{" "}
+              Trusted Security & Manpower Solutions{" "}
               <em className="not-italic text-[#FF8595] italic font-normal">
-                discipline
-              </em>
-              , delivered by ex-servicemen.
+                Since 1995
+              </em>.
             </h1>
 
             {/* Sub paragraph: shown in below mode */}
@@ -368,8 +365,7 @@ export function Hero({
               className="text-[13px] leading-relaxed text-white/90 font-normal"
               style={{ fontFamily: "'Inter', sans-serif" }}
             >
-              Guarding industry, mines and institutions across Jharkhand, Bihar and
-              Odisha — backed by over 25,000 certified personnel.
+              A pioneer in Jharkhand’s private security industry — an Ex-Servicemen enterprise, ISO 9001:2015 certified, and committed to quality, training, and compliance.
             </p>
           </div>
         )}
