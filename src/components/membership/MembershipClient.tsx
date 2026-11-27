@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Eye, ShieldCheck } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useLenis } from "@/src/lib/lenis";
 import { cn } from "@/src/lib/cn";
 import { DragMarquee } from "@/src/components/ui/DragMarquee";
@@ -27,6 +27,7 @@ export interface MembershipData {
 interface MembershipClientProps {
   memberships: MembershipData[];
   logos?: MembershipLogoData[];
+  variant?: "default" | "editorial";
 }
 
 function LocalLightbox({
@@ -34,11 +35,13 @@ function LocalLightbox({
   index,
   onClose,
   onNavigate,
+  reducedMotion,
 }: {
   items: MembershipData[];
   index: number | null;
   onClose: () => void;
   onNavigate: (dir: number) => void;
+  reducedMotion: boolean;
 }) {
   const open = index !== null;
   const item = open ? items[index] : null;
@@ -69,13 +72,13 @@ function LocalLightbox({
   }, [open, lenis, onClose, onNavigate]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={!reducedMotion}>
       {open && item && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={reducedMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
+          exit={reducedMotion ? undefined : { opacity: 0 }}
+          transition={{ duration: reducedMotion ? 0 : 0.25 }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-md touch-none"
           onClick={onClose}
         >
@@ -126,7 +129,11 @@ function LocalLightbox({
                 maxHeight: "80vh",
               }}
               animate={{ scale: zoomed ? 1.7 : 1 }}
-              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              transition={
+                reducedMotion
+                  ? { duration: 0 }
+                  : { type: "spring", damping: 25, stiffness: 220 }
+              }
             >
               <Image
                 src={item.image}
@@ -156,7 +163,13 @@ function LocalLightbox({
   );
 }
 
-export function MembershipClient({ memberships, logos = [] }: MembershipClientProps) {
+export function MembershipClient({
+  memberships,
+  logos = [],
+  variant = "default",
+}: MembershipClientProps) {
+  const editorial = variant === "editorial";
+  const prefersReducedMotion = useReducedMotion();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -205,18 +218,52 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
     <section
       id="membership"
       data-tone="light"
-      className="relative bg-[#FAF9F6] py-14 sm:py-20 border-t border-neutral-200/80 overflow-hidden"
+      className={cn(
+        "relative border-t border-neutral-200/80 overflow-hidden",
+        editorial ? "bg-[var(--color-paper)] py-10 sm:py-14" : "bg-[#FAF9F6] py-14 sm:py-20"
+      )}
     >
       <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-10 flex flex-col">
         {/* Header Block */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-12">
+        <div
+          className={cn(
+            "flex flex-col justify-between gap-4 sm:flex-row sm:items-end",
+            editorial ? "mb-6 gap-3 sm:mb-8" : "mb-8 sm:mb-12"
+          )}
+        >
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-sm bg-[#540b1360]/10 text-[#540B13] text-[11px] font-mono tracking-[0.2em] uppercase font-bold mb-2.5">
+            <div
+              className={cn(
+                "mb-2.5 inline-flex items-center gap-2 rounded-sm px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-[#540B13]",
+                editorial && "mb-2 bg-[#540B13]/[0.07] text-[9px] tracking-[0.17em]"
+              )}
+            >
               <ShieldCheck className="w-3.5 h-3.5" />
-              Accredited Authorities
+              {editorial ? "Trust & credentials" : "Accredited Authorities"}
             </div>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif text-[#1C1917] tracking-tight">
-              Memberships & <span className="text-[#540B13] italic font-normal">affiliations.</span>
+            <h2
+              className={cn(
+                "font-serif tracking-tight text-[#1C1917]",
+                editorial
+                  ? "text-[clamp(1.9rem,4vw,3rem)] leading-[1.05]"
+                  : "text-4xl sm:text-5xl lg:text-6xl"
+              )}
+            >
+              {editorial ? (
+                <>
+                  Certificates &{" "}
+                  <span className="font-normal italic text-[#540B13]">
+                    affiliations.
+                  </span>
+                </>
+              ) : (
+                <>
+                  Memberships &{" "}
+                  <span className="font-normal italic text-[#540B13]">
+                    affiliations.
+                  </span>
+                </>
+              )}
             </h2>
           </div>
         </div>
@@ -227,7 +274,8 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
           <div
             ref={scrollRef}
             className={cn(
-              "flex gap-4 sm:gap-6 pb-4 pt-1 snap-x snap-mandatory overflow-x-auto hide-scrollbar focus-visible:outline-none",
+              "flex gap-4 pb-4 pt-1 snap-x snap-mandatory overflow-x-auto hide-scrollbar focus-visible:outline-none sm:gap-6",
+              editorial && "gap-3 sm:gap-4",
               // On extra large screens, if items are few, center or display them cleanly
               memberships.length <= 4 && "lg:grid lg:grid-cols-4 lg:overflow-visible"
             )}
@@ -246,10 +294,21 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
                 tabIndex={0}
                 role="button"
                 aria-label={`View ${m.name} certificate`}
-                className="group snap-center shrink-0 w-[260px] xs:w-[285px] sm:w-[310px] lg:w-auto flex flex-col items-center cursor-pointer focus-visible:ring-2 focus-visible:ring-[#540B13] focus-visible:outline-none transition-transform duration-300"
+                className={cn(
+                  "group flex shrink-0 snap-center cursor-pointer flex-col items-center transition-transform duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#540B13]",
+                  editorial
+                    ? "w-[148px] xs:w-[160px] sm:w-[176px] lg:w-[176px] motion-reduce:transform-none motion-reduce:transition-none"
+                    : "w-[260px] xs:w-[285px] sm:w-[310px] lg:w-auto"
+                )}
               >
                 {/* Certificate Frame with Physical Archival Shadow */}
-                <div className="relative w-full aspect-[3/4] p-3 sm:p-3.5 bg-white border border-neutral-300/80 shadow-[0_8px_20px_rgba(0,0,0,0.06)] group-hover:shadow-[0_12px_28px_rgba(84,11,19,0.12)] group-hover:-translate-y-1.5 transition-all duration-300">
+                <div
+                  className={cn(
+                    "relative aspect-[3/4] w-full border border-neutral-300/80 bg-white p-3 shadow-[0_8px_20px_rgba(0,0,0,0.06)] transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_12px_28px_rgba(84,11,19,0.12)] sm:p-3.5",
+                    editorial &&
+                      "p-2 shadow-[0_5px_14px_rgba(0,0,0,0.06)] group-hover:shadow-[0_9px_20px_rgba(84,11,19,0.12)] sm:p-2.5 motion-reduce:transform-none motion-reduce:transition-none"
+                  )}
+                >
                   <div className="relative w-full h-full bg-[#FAF9F6] overflow-hidden flex items-center justify-center">
                     {failedImages[m.id] ? (
                       <div className="p-4 text-center">
@@ -269,7 +328,12 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
                     )}
 
                     {/* Hover Inspect Overlay */}
-                    <div className="absolute inset-0 bg-[#540B13]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-2xs">
+                    <div
+                      className={cn(
+                        "absolute inset-0 flex items-center justify-center bg-[#540B13]/10 opacity-0 backdrop-blur-2xs transition-opacity duration-300 group-hover:opacity-100",
+                        editorial && "motion-reduce:transition-none"
+                      )}
+                    >
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/95 rounded-full text-xs font-mono font-bold text-[#540B13] uppercase tracking-wider shadow-md">
                         <Eye className="w-3.5 h-3.5" />
                         Click to View
@@ -279,11 +343,21 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
                 </div>
 
                 {/* Caption Metadata */}
-                <div className="mt-3.5 text-center px-1 w-full">
-                  <h3 className="font-serif font-bold text-base sm:text-lg text-neutral-900 group-hover:text-[#540B13] transition-colors leading-snug line-clamp-1">
+                <div className={cn("mt-3.5 w-full px-1 text-center", editorial && "mt-2.5")}>
+                  <h3
+                    className={cn(
+                      "line-clamp-1 font-serif font-bold leading-snug text-neutral-900 transition-colors group-hover:text-[#540B13]",
+                      editorial ? "text-sm sm:text-[15px]" : "text-base sm:text-lg"
+                    )}
+                  >
                     {m.name}
                   </h3>
-                  <span className="inline-block text-[11px] font-mono tracking-widest uppercase text-[#540B13] font-semibold mt-1">
+                  <span
+                    className={cn(
+                      "mt-1 inline-block font-mono text-[11px] font-semibold uppercase tracking-widest text-[#540B13]",
+                      editorial && "text-[9px] tracking-[0.13em]"
+                    )}
+                  >
                     {m.type}
                   </span>
                 </div>
@@ -402,6 +476,7 @@ export function MembershipClient({ memberships, logos = [] }: MembershipClientPr
         index={openIndex}
         onClose={() => setOpenIndex(null)}
         onNavigate={navigateLightbox}
+        reducedMotion={editorial && Boolean(prefersReducedMotion)}
       />
     </section>
   );
