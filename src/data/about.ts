@@ -1,21 +1,49 @@
 
 export const ABOUT = {
   eyebrow: "About Ranchi Security",
-  headline: "Built by soldiers. Driven by skill.",
-  accent: "Driven",
+  headline: "A Legacy of Trust, Discipline & Excellence",
+  accent: "Excellence",
 
-  // TODO: confirm founding year (site says 1995/1997 in places)
-  body: "Founded in 1995 by ex-servicemen and energetic young professionals, Ranchi Security is one of Jharkhand's pioneering private security companies, delivering protection through quality training, innovation and strict compliance.",
+  summary:
+    "Incorporated in 1995, M/s Ranchi Security (P) Ltd. is an Ex-Servicemen enterprise and one of the pioneers of Jharkhand's private security industry.",
+  homeDetail:
+    "Empanelled with the Directorate General Resettlement (DGR), Ministry of Defence, since 1996, RSP has served government departments, PSUs and industry with disciplined, dependable service.",
+  body: [
+    "M/s Ranchi Security (P) Ltd. (RSP) has been among the pioneers of the private security industry in Jharkhand since its incorporation under the Companies Act 1956 in 1995. An Ex-Servicemen enterprise, RSP has contributed as a thought and knowledge leader in the industry since its inception.",
+    "Empanelled with the Directorate General Resettlement (DGR), Ministry of Defence, since 1996, RSP has been sponsored to serve government departments and Public Sector Undertakings (PSUs). Over the years, it has built a strong reputation for honest, sincere and efficient service across government, PSU and industry assignments.",
+    "Through continuous innovation, quality training and rigorous compliance, RSP delivers dependable security solutions—an approach recognised with honours from industry-linked organisations.",
+  ],
 
-  credentials: [
-    "Ex-servicemen led",
-    "Skill India & MEPSC affiliated",
-    "Government skill-mission partner",
+  whyChooseUs: [
+    {
+      title: "Ex-Servicemen Leadership",
+      description:
+        "Built on military discipline, integrity and operational accountability.",
+      icon: "shield",
+    },
+    {
+      title: "Government Empanelment",
+      description:
+        "DGR-empanelled with the Ministry of Defence since 1996.",
+      icon: "government",
+    },
+    {
+      title: "ISO 9001:2015 Certification",
+      description:
+        "Quality systems that support consistent, reliable service delivery.",
+      icon: "quality",
+    },
+    {
+      title: "NSDC/MEPSC Accredited Training",
+      description:
+        "NSDC and MEPSC-accredited training under NSQF standards.",
+      icon: "training",
+    },
   ],
 
   cta: {
-    label: "Our story →",
-    href: "#",
+    label: "Our story",
+    href: "/about",
   },
 
   // Stat strip (replaces "By the numbers" section)
@@ -35,10 +63,9 @@ export const ABOUT = {
   ],
 
   images: {
-    portrait: "/about/director-minister.jpg",
-    portraitAlt: "Director of Ranchi Security Pvt. Ltd., an ex-serviceman",
-    landscape: "/hero/F6 (1).jpg",
-    landscapeAlt: "Security guards in training formation",
+    portrait: "/hero/f1.jpg",
+    portraitAlt:
+      "Ranchi Security representatives presenting a company certificate",
   },
 
   badgeText: "RANCHI SECURITY · EX-SERVICEMEN LED · ESTD 1995 · ",

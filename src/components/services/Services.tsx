@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { ArrowUpRight, Radio, ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -12,9 +12,17 @@ import { cn } from "@/src/lib/cn";
 
 const AUTOPLAY_MS = 5000;
 const PAUSE_ON_HOVER = true;
+const SERVICE_COUNT = FEATURED_SERVICES.length;
 
 function wrap(val: number): number {
-  return ((((val + 2.5) % 5) + 5) % 5) - 2.5;
+  if (SERVICE_COUNT <= 1) return 0;
+  return ((((val + SERVICE_COUNT / 2) % SERVICE_COUNT) + SERVICE_COUNT) % SERVICE_COUNT) - SERVICE_COUNT / 2;
+}
+
+function normalizeIndex(index: number): number {
+  return SERVICE_COUNT > 0
+    ? ((Math.round(index) % SERVICE_COUNT) + SERVICE_COUNT) % SERVICE_COUNT
+    : 0;
 }
 
 function lerp3(t: number, a: number, b: number, c: number): number {
@@ -42,10 +50,10 @@ export function Services() {
   // Mobile Coverflow Stage & Card Refs
   const stageRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const detailsRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null]);
-  const nearCenterFlags = useRef<boolean[]>([true, false, false, false, false]);
-  const lastZIndexRef = useRef<number[]>([50, 35, 20, 20, 35]);
-  const lastVisibilityRef = useRef<boolean[]>([true, true, false, false, true]);
+  const detailsRefs = useRef<(HTMLDivElement | null)[]>(Array(SERVICE_COUNT).fill(null));
+  const nearCenterFlags = useRef<boolean[]>(Array(SERVICE_COUNT).fill(false));
+  const lastZIndexRef = useRef<number[]>(Array(SERVICE_COUNT).fill(0));
+  const lastVisibilityRef = useRef<boolean[]>(Array(SERVICE_COUNT).fill(false));
 
   const cardWRef = useRef<number>(300);
   const cardHRef = useRef<number>(400);
@@ -66,9 +74,11 @@ export function Services() {
   const isDraggingRef = useRef<boolean>(false);
   const hasCapturedRef = useRef<boolean>(false);
   const swallowClickRef = useRef<boolean>(false);
+  const clickResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setTimeout(() => setMounted(true), 0);
+    const timeout = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timeout);
   }, []);
 
   // Write styles via refs, transform and opacity only, no layout reads in the loop
@@ -78,7 +88,7 @@ export function Services() {
     const x1 = cardW * 0.93 + 12;
     const x2 = x1 + cardW * 0.9;
 
-    for (let i = 0; i < FEATURED_SERVICES.length; i++) {
+    for (let i = 0; i < SERVICE_COUNT; i++) {
       const cardEl = cardRefs.current[i];
       if (!cardEl) continue;
 
@@ -107,7 +117,7 @@ export function Services() {
         const x = Math.sign(d) * lerp3(absD, 0, x1, x2);
         cardEl.style.transform = `translate3d(${x.toFixed(2)}px, ${translateY.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
 
-        const zIndex = Math.round((5 - absD) * 10);
+        const zIndex = Math.round((SERVICE_COUNT + 2 - absD) * 10);
         if (lastZIndexRef.current[i] !== zIndex) {
           lastZIndexRef.current[i] = zIndex;
           cardEl.style.zIndex = String(zIndex);
@@ -134,7 +144,7 @@ export function Services() {
     }
 
     // Update React active index only when integer active index changes
-    const activeIndex = (((Math.round(currentPos) % 5) + 5) % 5);
+    const activeIndex = normalizeIndex(currentPos);
     if (activeIndex !== activeIdxRef.current) {
       activeIdxRef.current = activeIndex;
       setActiveIdx(activeIndex);
@@ -154,7 +164,8 @@ export function Services() {
       lastTimeRef.current = time;
 
       if (isReducedMotionRef.current) {
-        posRef.current = targetRef.current;
+        posRef.current = normalizeIndex(targetRef.current);
+        targetRef.current = posRef.current;
         renderStyles(posRef.current);
         animFrameRef.current = null;
         lastTimeRef.current = null;
@@ -163,7 +174,8 @@ export function Services() {
 
       const diff = targetRef.current - posRef.current;
       if (Math.abs(diff) <= 0.001 && !isDraggingRef.current) {
-        posRef.current = targetRef.current;
+        posRef.current = normalizeIndex(targetRef.current);
+        targetRef.current = posRef.current;
         renderStyles(posRef.current);
         animFrameRef.current = null;
         lastTimeRef.current = null;
@@ -184,7 +196,8 @@ export function Services() {
 
   const startAnimation = useCallback(() => {
     if (isReducedMotionRef.current) {
-      posRef.current = targetRef.current;
+      posRef.current = normalizeIndex(targetRef.current);
+      targetRef.current = posRef.current;
       renderStyles(posRef.current);
       return;
     }
@@ -226,15 +239,20 @@ export function Services() {
   }, [mounted]);
 
   // ResizeObserver for Mobile Stage
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!mounted) return;
     const stage = stageRef.current;
     if (!stage) return;
 
     const measure = () => {
       const vw = window.innerWidth;
+      const stageWidth = stage.getBoundingClientRect().width;
+      if (stageWidth <= 0) return;
       const isTablet = vw >= 640 && vw < 1024;
-      const cardW = isTablet ? Math.min(vw * 0.52, 380) : Math.min(vw * 0.72, 340);
+      const availableWidth = Math.max(0, stageWidth - 32);
+      const cardW = isTablet
+        ? Math.min(vw * 0.56, 420, availableWidth)
+        : Math.min(vw * 0.78, 360, availableWidth);
       const cardH = cardW * (4 / 3);
       cardWRef.current = cardW;
       cardHRef.current = cardH;
@@ -290,14 +308,11 @@ export function Services() {
 
   const scheduleNext = useCallback(() => {
     clearTimer();
-    if (shouldPause()) return;
+    if (!isDesktopDevice() || shouldPause()) return;
 
     timerRef.current = setTimeout(() => {
       targetRef.current += 1;
       startAnimation();
-      if (isDesktopDevice()) {
-        setActiveIdx((prev) => (prev + 1) % FEATURED_SERVICES.length);
-      }
       scheduleNextRef.current();
     }, AUTOPLAY_MS);
   }, [clearTimer, shouldPause, startAnimation, isDesktopDevice]);
@@ -307,22 +322,16 @@ export function Services() {
   }, [scheduleNext]);
 
   const nextSlide = useCallback(() => {
-    targetRef.current += 1;
+      targetRef.current = Math.round(targetRef.current) + 1;
     startAnimation();
-    if (isDesktopDevice()) {
-      setActiveIdx((prev) => (prev + 1) % FEATURED_SERVICES.length);
-    }
     scheduleNext();
-  }, [startAnimation, scheduleNext, isDesktopDevice]);
+  }, [startAnimation, scheduleNext]);
 
   const prevSlide = useCallback(() => {
-    targetRef.current -= 1;
+      targetRef.current = Math.round(targetRef.current) - 1;
     startAnimation();
-    if (isDesktopDevice()) {
-      setActiveIdx((prev) => (prev - 1 + FEATURED_SERVICES.length) % FEATURED_SERVICES.length);
-    }
     scheduleNext();
-  }, [startAnimation, scheduleNext, isDesktopDevice]);
+  }, [startAnimation, scheduleNext]);
 
   const handleManualSelect = useCallback(
     (index: number) => {
@@ -445,8 +454,10 @@ export function Services() {
     if (isDraggingRef.current) {
       isDraggingRef.current = false;
       swallowClickRef.current = true;
-      setTimeout(() => {
+      if (clickResetTimerRef.current) clearTimeout(clickResetTimerRef.current);
+      clickResetTimerRef.current = setTimeout(() => {
         swallowClickRef.current = false;
+        clickResetTimerRef.current = null;
       }, 120);
 
       const now = performance.now();
@@ -454,11 +465,8 @@ export function Services() {
         velocityRef.current = 0;
       }
 
-      // flick: target = round(pos - velocity * 0.25) clamped to +-2
       const rawTarget = Math.round(posRef.current - velocityRef.current * 0.25);
-      const delta = rawTarget - Math.round(dragStartPosRef.current);
-      const clampedDelta = Math.max(-2, Math.min(2, delta));
-      targetRef.current = Math.round(dragStartPosRef.current) + clampedDelta;
+      targetRef.current = rawTarget;
       startAnimation();
     }
 
@@ -594,6 +602,10 @@ export function Services() {
 
     return () => {
       clearTimer();
+      if (clickResetTimerRef.current) {
+        clearTimeout(clickResetTimerRef.current);
+        clickResetTimerRef.current = null;
+      }
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
       }
@@ -619,7 +631,7 @@ export function Services() {
     );
   }
 
-  const count = FEATURED_SERVICES.length;
+const count = SERVICE_COUNT;
 const safeActiveIdx = count > 0 ? ((activeIdx % count) + count) % count : 0;
 const halfSpan = Math.floor(count / 2);
 
@@ -636,7 +648,7 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
       ref={sectionRef}
       id="services"
       data-tone="light"
-      className="relative bg-[#FAF8F5] py-14 sm:py-20 border-t border-neutral-200/80 overflow-hidden"
+      className="relative bg-[#FAF8F5] py-14 sm:py-20 border-t border-neutral-200/80 overflow-hidden border-b-2 border-[#000]"
     >
       <div className="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
         {/* Header Block */}
@@ -662,11 +674,12 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
 
         {/* ── DESKTOP: Dynamic Expanding Dossier Deck (>= 1024px) ── */}
        {/* ── DESKTOP / LAPTOP / ULTRAWIDE / 4K (>= 1024px) ── */}
+<div className="hidden lg:grid w-full grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2">
 <div
   ref={deckRef}
   role="tablist"
   aria-label="Deployment Divisions"
-  className="hidden lg:flex gap-3 h-[420px] xl:h-[460px] 2xl:h-[500px] w-full"
+  className="col-start-2 flex h-[420px] w-full gap-3 xl:h-[460px] 2xl:h-[500px]"
   style={
     {
       "--open-w": `${Math.round(openWidth)}px`,
@@ -822,8 +835,10 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
   })}
 </div>
 
+</div>
+
 {/* ── PHONE + TABLET (< 1024px): Infinite Coverflow Carousel ── */}
-<div className="lg:hidden w-full overflow-x-clip">
+<div className="lg:hidden relative w-full">
   <div
     ref={stageRef}
     role="region"
@@ -831,17 +846,14 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
     aria-label="Featured Services Carousel"
     tabIndex={0}
     onKeyDown={(e) => {
-      if (count <= 1) return;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        targetRef.current = Math.round(targetRef.current) - 1;
-        startAnimation();
-        scheduleNext();
+        e.stopPropagation();
+        prevSlide();
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        targetRef.current = Math.round(targetRef.current) + 1;
-        startAnimation();
-        scheduleNext();
+        e.stopPropagation();
+        nextSlide();
       }
     }}
     onPointerDown={handlePointerDown}
@@ -850,14 +862,14 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
     onPointerCancel={handlePointerCancel}
     onClickCapture={handleStageClickCapture}
     className={cn(
-      "relative w-full overflow-hidden touch-pan-y select-none outline-none",
-      "h-[calc(min(72vw,340px)*4/3+32px)] sm:h-[calc(min(52vw,380px)*4/3+32px)]",
+        "relative w-full overflow-hidden touch-pan-y select-none outline-none",
+        "h-[calc(min(78vw,360px)*4/3+32px)] sm:h-[calc(min(56vw,420px)*4/3+32px)]",
       "focus-visible:ring-2 focus-visible:ring-[#3D0A12] rounded-2xl"
     )}
     style={
       {
-        "--card-w": "min(72vw, 340px)",
-        "--card-h": "calc(min(72vw, 340px) * 4 / 3)",
+        "--card-w": "min(78vw, 360px)",
+        "--card-h": "calc(min(78vw, 360px) * 4 / 3)",
         transform: "translate3d(0, 0, 0)",
       } as React.CSSProperties
     }
@@ -868,6 +880,9 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
         ref={(el) => {
           cardRefs.current[i] = el;
         }}
+        role="group"
+        aria-roledescription="slide"
+        aria-label={`${i + 1} of ${count}: ${service.title}`}
         onClick={(e) => {
           if (swallowClickRef.current) {
             e.preventDefault();
@@ -892,11 +907,11 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
           height: "var(--card-h)",
           marginLeft: "calc(-1 * var(--card-w) / 2)",
           transform:
-            i === safeActiveIdx
+            i === 0
               ? "translate3d(0px, 0px, 0px) scale(1)"
-              : `translate3d(${wrap(i - safeActiveIdx) * 220}px, 14px, 0px) scale(0.86)`,
-          opacity: i === safeActiveIdx ? 1 : Math.abs(wrap(i - safeActiveIdx)) <= 1 ? 0.65 : 0,
-          zIndex: i === safeActiveIdx ? 30 : 20 - Math.abs(wrap(i - safeActiveIdx)),
+              : `translate3d(${wrap(i) * 220}px, 14px, 0px) scale(0.86)`,
+          opacity: i === 0 ? 1 : 0.65,
+          zIndex: i === 0 ? 30 : 20 - Math.abs(wrap(i)),
         }}
       >
         <Image
@@ -906,7 +921,7 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
           priority={i === 0}
           className="object-cover pointer-events-none"
           style={{ objectPosition: service.focal || "center" }}
-          sizes="(max-width: 640px) 72vw, 380px"
+          sizes="(max-width: 640px) 78vw, 420px"
         />
 
         <div className="absolute inset-0 bg-gradient-to-t from-[#200306]/95 via-black/40 to-black/20 pointer-events-none" />
@@ -921,7 +936,7 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
           </span>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 z-10 text-white">
+        <div className="absolute bottom-0 left-0 right-0 z-10 px-8 py-4 text-white sm:p-5">
           <h3 className="font-serif font-bold text-lg sm:text-xl text-white leading-tight">
             {service.title}
           </h3>
@@ -931,8 +946,8 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
               detailsRefs.current[i] = el;
             }}
             style={{
-              opacity: i === safeActiveIdx ? 1 : 0,
-              pointerEvents: i === safeActiveIdx ? "auto" : "none",
+              opacity: i === 0 ? 1 : 0,
+              pointerEvents: i === 0 ? "auto" : "none",
             }}
           >
             <p className="text-xs text-neutral-200 line-clamp-2 font-sans leading-relaxed mt-1.5">
@@ -959,68 +974,65 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
       </div>
     ))}
 
-    {count > 1 && (
-      <>
-        <button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => {
-            targetRef.current = Math.round(targetRef.current) - 1;
-            startAnimation();
-            scheduleNext();
-          }}
-          aria-label="Previous service"
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-40 flex items-center justify-center w-10 h-10 rounded-full bg-[#3D0A12]/90 text-white ring-1 ring-white/20 transition-transform duration-150 hover:bg-[#4D0D17] active:scale-95 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer"
-        >
-          <ChevronLeft className="w-5 h-5 text-white" />
-        </button>
-
-        <button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => {
-            targetRef.current = Math.round(targetRef.current) + 1;
-            startAnimation();
-            scheduleNext();
-          }}
-          aria-label="Next service"
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-40 flex items-center justify-center w-10 h-10 rounded-full bg-[#3D0A12]/90 text-white ring-1 ring-white/20 transition-transform duration-150 hover:bg-[#4D0D17] active:scale-95 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer"
-        >
-          <ChevronRight className="w-5 h-5 text-white" />
-        </button>
-      </>
-    )}
   </div>
 
   {count > 1 && (
+    <div className="pointer-events-none absolute inset-0 z-50">
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={prevSlide}
+        aria-label="Previous service"
+        className="group pointer-events-auto absolute left-0 top-1/2 flex h-11 w-11 -translate-x-[13px] -translate-y-1/2 cursor-pointer items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0A12]"
+      >
+        <span className="flex h-7 w-7 -translate-x-2 items-center justify-center rounded-full bg-[#3D0A12]/90 text-white ring-1 ring-white/25 shadow-lg transition-colors group-hover:bg-[#4D0D17]">
+          <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={nextSlide}
+        aria-label="Next service"
+        className="group pointer-events-auto absolute right-0 top-1/2 flex h-11 w-11 translate-x-[13px] -translate-y-1/2 cursor-pointer items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0A12]"
+      >
+        <span className="flex h-7 w-7 translate-x-2 items-center justify-center rounded-full bg-[#3D0A12]/90 text-white ring-1 ring-white/25 shadow-lg transition-colors group-hover:bg-[#4D0D17]">
+          <ChevronRight aria-hidden="true" className="h-5 w-5" />
+        </span>
+      </button>
+    </div>
+  )}
+
+  {count > 1 && (
     <div
-      className="flex items-center justify-center gap-2 mt-4"
+      className="mt-4 flex items-center justify-center gap-2"
       role="tablist"
       aria-label="Services Pagination"
     >
       {FEATURED_SERVICES.map((service, i) => {
         const isDotActive = safeActiveIdx === i;
         return (
-          <button
-            key={service.slug}
-            type="button"
-            role="tab"
-            aria-selected={isDotActive}
-            aria-label={`Go to ${service.title}`}
-            onClick={() => {
-              const currentActive = (((Math.round(posRef.current) % count) + count) % count);
-              const diff = getShortestStep(i, currentActive);
-              targetRef.current = Math.round(posRef.current) + diff;
-              startAnimation();
-              scheduleNext();
-            }}
-            className={cn(
-              "h-1.5 rounded-full transition-all duration-300 cursor-pointer p-0 border-0 outline-none focus-visible:ring-2 focus-visible:ring-[#3D0A12]",
-              isDotActive
-                ? "w-[18px] bg-[#3D0A12]"
-                : "w-1.5 bg-[#3D0A12]/25 hover:bg-[#3D0A12]/40"
-            )}
-          />
+        <button
+          key={service.slug}
+          type="button"
+          role="tab"
+          aria-selected={isDotActive}
+          aria-label={`Go to ${service.title}`}
+          onClick={() => {
+            const currentActive = (((Math.round(posRef.current) % count) + count) % count);
+            const diff = getShortestStep(i, currentActive);
+            targetRef.current = Math.round(posRef.current) + diff;
+            startAnimation();
+            scheduleNext();
+          }}
+          className={cn(
+            "h-1.5 rounded-full transition-all duration-300 cursor-pointer p-0 border-0 outline-none focus-visible:ring-2 focus-visible:ring-[#3D0A12]",
+            isDotActive
+              ? "w-[18px] bg-[#3D0A12]"
+              : "w-1.5 bg-[#3D0A12]/25 hover:bg-[#3D0A12]/40"
+          )}
+        />
         );
       })}
     </div>

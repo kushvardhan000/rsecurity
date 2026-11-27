@@ -9,6 +9,16 @@ export type HeroSlide = {
 };
 
 export const HERO_SLIDES: HeroSlide[] = [
+  
+  {
+    src: "/hero/f2 (1).jpg",
+    alt: "Ex-servicemen led guard deployment",
+    focal: "center 6%",
+    focalMobile: "50% 8%",
+    caption: "Ex-servicemen led deployment",
+    w: 1280,
+    h: 720,
+  },
   {
     src: "/hero/1P.jpg",
     alt: "Ranchi Security personnel on field deployment",
@@ -28,11 +38,11 @@ export const HERO_SLIDES: HeroSlide[] = [
     h: 720,
   },
   {
-    src: "/hero/f2 (1).jpg",
-    alt: "Ex-servicemen led guard deployment",
-    focal: "center 6%",
-    focalMobile: "50% 8%",
-    caption: "Ex-servicemen led deployment",
+    src: "/hero/1P.jpg",
+    alt: "Ranchi Security personnel on field deployment",
+    focal: "center 10%",
+    focalMobile: "50% 12%",
+    caption: "Securing industry, mines and institutions",
     w: 1280,
     h: 720,
   },

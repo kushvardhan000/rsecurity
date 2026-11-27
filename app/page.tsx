@@ -1,6 +1,8 @@
 import { Hero } from "@/src/components/hero/Hero";
 import Stats from "@/src/components/hero/Stats";
 import { Services } from "@/src/components/services/Services";
+import { HomeAbout } from "@/src/components/home/HomeAbout";
+import { WhyChooseUs } from "@/src/components/home/WhyChooseUs";
 import { Achievements } from "@/src/components/achievements/Achievements";
 import { Events } from "@/src/components/events/Events";
 import { Gallery } from "@/src/components/gallery/Gallery";
@@ -14,7 +16,9 @@ export default function HomePage() {
     <>
      <Stats />
       <Hero />
+      <HomeAbout />
       <Services />
+      <WhyChooseUs />
       <Achievements />
       <Events />
       <Awards />
