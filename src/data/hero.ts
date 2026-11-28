@@ -38,15 +38,6 @@ export const HERO_SLIDES: HeroSlide[] = [
     h: 720,
   },
   {
-    src: "/hero/1P.jpg",
-    alt: "Ranchi Security personnel on field deployment",
-    focal: "center 10%",
-    focalMobile: "50% 12%",
-    caption: "Securing industry, mines and institutions",
-    w: 1280,
-    h: 720,
-  },
-  {
     src: "/hero/F3.jpg",
     alt: "Guards stationed at a client facility",
     focal: "center top",

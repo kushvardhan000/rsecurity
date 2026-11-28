@@ -24,7 +24,26 @@ const SCROLL_SHRINK = 30;
 const SCROLL_HIDE = 80;
 const SCROLL_DELTA = 4;
 
+/* ── Route matching ───────────────────────────────── */
+
+/** Strip query/hash and any trailing slash (except the root "/"). */
+function normalizePath(path: string): string {
+  if (!path) return "/";
+  const clean = path.split("?")[0].split("#")[0];
+  if (clean.length > 1 && clean.endsWith("/")) return clean.replace(/\/+$/, "");
+  return clean || "/";
+}
+
+/** Exact match for "/", otherwise match the segment and its nested routes. */
+function isLinkActive(pathname: string, href: string): boolean {
+  const path = normalizePath(pathname);
+  const target = normalizePath(href);
+  if (target === "/") return path === "/";
+  return path === target || path.startsWith(`${target}/`);
+}
+
 const MOBILE_PRIMARY = [
+  { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "Services", href: "/services" },
   { label: "Awards", href: "/awards" },
@@ -36,14 +55,6 @@ const MOBILE_SECONDARY = [
   { label: "Events", href: "/events" },
   { label: "Gallery", href: "/gallery" },
   { label: "Careers", href: "/careers" },
-];
-
-const DESKTOP_PANEL_LINKS = [
-  { label: "Events", href: "/events" },
-  { label: "Gallery", href: "/gallery" },
-  { label: "Careers", href: "/careers" },
-  { label: "Training", href: "/training" },
-  { label: "Press", href: "/press" },
 ];
 
 /* ── Overlay lock hook ───────────────────────────── */
@@ -113,7 +124,6 @@ export function Navbar() {
   const [visible, setVisible] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [active, setActive] = useState<string>("");
 
   const pathname = usePathname();
   const menuBtnRef = useRef<HTMLButtonElement>(null);
@@ -180,48 +190,6 @@ export function Navbar() {
   }, [menuOpen, panelOpen, preloaderDone, pathname]);
 
   const solid = scrolled || tone === "light";
-
-  /* ── Active section via scroll position ────────── */
-
-useEffect(() => {
-  if (pathname !== "/") {
-    setActive(pathname.slice(1).split("/")[0]);
-    return;
-  }
-
-  const ids = NAV_LINKS.map((l) => l.href.slice(1)).filter(Boolean);
-  let raf = 0;
-
-  const update = () => {
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(() => {
-      const line = window.innerHeight * 0.3;
-      let current = ""; // "" = Home / hero
-      let bestTop = -Infinity;
-
-      for (const id of ids) {
-        const el = document.getElementById(id);
-        if (!el) continue;
-        const top = el.getBoundingClientRect().top;
-        // the section closest to (but not below) the line wins
-        if (top <= line && top > bestTop) {
-          bestTop = top;
-          current = id;
-        }
-      }
-      setActive(current);
-    });
-  };
-
-  update();
-  window.addEventListener("scroll", update, { passive: true });
-  window.addEventListener("resize", update, { passive: true });
-  return () => {
-    cancelAnimationFrame(raf);
-    window.removeEventListener("scroll", update);
-    window.removeEventListener("resize", update);
-  };
-}, [pathname]);
 
   /* ── Close on route change ─────────────────────── */
 
@@ -384,12 +352,12 @@ useEffect(() => {
             className="hidden lg:flex items-center gap-1 xl:gap-2"
           >
             {NAV_LINKS.map((link: NavLink) => {
-              const isActive = active === link.href.slice(1);
+              const isActive = isLinkActive(pathname, link.href);
               return (
                 <Link
                   key={link.label}
                   href={link.href}
-                  aria-current={isActive ? "true" : undefined}
+                  aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "group relative px-3 py-2 text-[13px] font-semibold tracking-[0.05em] uppercase transition-colors duration-200",
                     solid
@@ -426,11 +394,16 @@ useEffect(() => {
               onClick={openPanel}
               aria-label="More navigation"
               aria-expanded={panelOpen}
+              aria-current={SECONDARY_LINKS.some((l) => isLinkActive(pathname, l.href)) ? "page" : undefined}
               aria-controls="desktop-panel"
               className={cn(
-                "hidden lg:flex h-[44px] items-center gap-1.5 px-4 rounded-md border text-[13px] font-semibold tracking-wider uppercase transition-colors cursor-pointer",
+                "group relative hidden lg:flex h-[44px] items-center gap-1.5 px-4 rounded-md border text-[13px] font-semibold tracking-wider uppercase transition-colors cursor-pointer",
                 solid
-                  ? "text-neutral-700 border-neutral-300 hover:border-[#800020] hover:text-[#800020] bg-white/70"
+                  ? SECONDARY_LINKS.some((l) => isLinkActive(pathname, l.href))
+                    ? "text-[#800020] border-[#800020]/40 bg-[#800020]/5"
+                    : "text-neutral-700 border-neutral-300 hover:border-[#800020] hover:text-[#800020] bg-white/70"
+                  : SECONDARY_LINKS.some((l) => isLinkActive(pathname, l.href))
+                  ? "text-white border-white/70 bg-white/10"
                   : "text-white border-white/35 hover:border-white hover:bg-white/10 bg-transparent backdrop-blur-xs"
               )}
             >
@@ -542,12 +515,13 @@ useEffect(() => {
               <div className="flex flex-col flex-1 justify-center min-w-0">
                 <nav aria-label="Mobile navigation" className="rounded-2xl bg-[#5A0F1C] border border-white/10 p-2 mt-4 flex flex-col min-w-0 shrink-0">
                   {MOBILE_PRIMARY.map((link, idx, arr) => {
-                    const isActive = active === link.href.slice(1) || pathname === link.href;
+                    const isActive = isLinkActive(pathname, link.href);
                     return (
                       <div key={link.label}>
                         <Link
                           href={link.href}
                           onClick={closeMenu}
+                          aria-current={isActive ? "page" : undefined}
                           className={cn(
                             "group flex items-center justify-between rounded-xl px-4 text-white min-w-0 min-h-[52px] [@media(max-height:640px)]:min-h-[44px] hover:bg-[#7A1426] transition-colors active:bg-[#7A1426]",
                             isActive && "bg-[#7A1426]"
@@ -577,7 +551,11 @@ useEffect(() => {
                     key={link.label}
                     href={link.href}
                     onClick={closeMenu}
-                    className="hover:text-white transition-colors truncate min-w-0"
+                    aria-current={isLinkActive(pathname, link.href) ? "page" : undefined}
+                    className={cn(
+                      "hover:text-white transition-colors truncate min-w-0",
+                      isLinkActive(pathname, link.href) && "text-white underline underline-offset-4 decoration-[#F2B8BF]"
+                    )}
                   >
                     {link.label}
                   </Link>
@@ -672,31 +650,45 @@ useEffect(() => {
               {/* SCROLL AREA */}
               <div className="relative z-10 min-h-0 flex-1 flex flex-col justify-center px-12 overflow-y-auto overscroll-contain overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-lenis-prevent>
                 <nav aria-label="Secondary navigation" className="flex flex-col justify-center min-w-0">
-                  {DESKTOP_PANEL_LINKS.map((link, i) => (
-                    <motion.div
-                      key={link.label}
-                      initial={{ opacity: 0, x: 15 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        duration: 0.35,
-                        delay: 0.08 + i * 0.05,
-                        ease: EASE,
-                      }}
-                    >
-                      <Link
-                        href={link.href}
-                        onClick={closePanel}
-                        className="block text-white transition-colors hover:text-white/70 min-w-0 leading-[1.2]"
-                        style={{
-                          fontFamily: "var(--font-display-serif)",
-                          fontSize: "clamp(1.25rem, 3.6dvh, 1.75rem)",
-                          paddingBlock: "clamp(0.35rem, 1.3dvh, 0.9rem)"
+                  {SECONDARY_LINKS.map((link, i) => {
+                    const isActive = isLinkActive(pathname, link.href);
+                    return (
+                      <motion.div
+                        key={link.label}
+                        initial={{ opacity: 0, x: 15 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          duration: 0.35,
+                          delay: 0.08 + i * 0.05,
+                          ease: EASE,
                         }}
                       >
-                        {link.label}
-                      </Link>
-                    </motion.div>
-                  ))}
+                        <Link
+                          href={link.href}
+                          onClick={closePanel}
+                          aria-current={isActive ? "page" : undefined}
+                          className={cn(
+                            "group flex items-center gap-3 transition-colors min-w-0 leading-[1.2]",
+                            isActive ? "text-[#F2B8BF]" : "text-white hover:text-white/70"
+                          )}
+                          style={{
+                            fontFamily: "var(--font-display-serif)",
+                            fontSize: "clamp(1.25rem, 3.6dvh, 1.75rem)",
+                            paddingBlock: "clamp(0.35rem, 1.3dvh, 0.9rem)"
+                          }}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              "h-px shrink-0 bg-[#F2B8BF] transition-all duration-300 motion-reduce:transition-none",
+                              isActive ? "w-6 opacity-100" : "w-0 opacity-0 group-hover:w-4 group-hover:opacity-60"
+                            )}
+                          />
+                          {link.label}
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
                 </nav>
               </div>
 

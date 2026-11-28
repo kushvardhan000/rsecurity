@@ -12,13 +12,10 @@ export const PRELOADER_DONE_EVENT = "rspl:preloader-done";
  * otherwise flips when the Preloader dispatches its done event.
  */
 export function usePreloaderDone() {
-  const [done, setDone] = useState<boolean>(() => {
-    if (typeof document !== "undefined") {
-      const html = document.documentElement;
-      return html.dataset.ready === "1" || html.dataset.preloaded === "1";
-    }
-    return false; // Guard for SSR
-  });
+  // Always start `false` so the server and client initial renders match.
+  // The effect below promotes this to `true` after mount when the preloader
+  // was already skipped/finished this session (avoids hydration mismatches).
+  const [done, setDone] = useState<boolean>(false);
 
   useEffect(() => {
     if (done) return;

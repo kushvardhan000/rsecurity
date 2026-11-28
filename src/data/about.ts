@@ -5,7 +5,7 @@ export const ABOUT = {
   accent: "Excellence",
 
   summary:
-    "Incorporated in 1995, M/s Ranchi Security (P) Ltd. is an Ex-Servicemen enterprise and one of the pioneers of Jharkhand's private security industry.",
+      "Established in 1995, M/s Ranchi Security (P) Ltd. is one of the pioneers of Jharkhand's private security industry. Registered under the Companies Act, 1956, this Ex-Servicemen enterprise has built its legacy on military discipline, integrity and operational excellence, emerging as a thought and knowledge leader in the industry.",
   homeDetail:
     "Empanelled with the Directorate General Resettlement (DGR), Ministry of Defence, since 1996, RSP has served government departments, PSUs and industry with disciplined, dependable service.",
   body: [
@@ -63,9 +63,14 @@ export const ABOUT = {
   ],
 
   images: {
-    portrait: "/hero/f1.jpg",
+    portrait: "/about/bg-image.png",
     portraitAlt:
-      "Ranchi Security representatives presenting a company certificate",
+      "Ranchi Security leadership presenting company credentials",
+    campus: "/about/bg-image.png",
+    campusAlt:
+      "Ranchi Security leadership presenting company credentials",
+    cutout: "/about/bg-image.png",
+    cutoutAlt: "Ranchi Security leadership portrait",
   },
 
   badgeText: "RANCHI SECURITY · EX-SERVICEMEN LED · ESTD 1995 · ",
