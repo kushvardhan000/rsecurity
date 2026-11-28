@@ -30,7 +30,7 @@ export const FEATURED_SERVICES: FeaturedService[] = [
   },
   {
     slug: "manpower",
-    title: "Manpower Supply",
+    title: "Human Resource",
     short:
       "Reliable workforce supply tailored to the operational needs of government bodies, PSUs, and commercial enterprises.",
     long:

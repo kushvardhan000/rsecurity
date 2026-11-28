@@ -195,7 +195,7 @@ export function DragMarquee({
       s.x = s.dragStartX + dx;
 
       const deltaX = e.clientX - s.lastPoint;
-      const t = performance.now();
+      const t = e.timeStamp;
       const dt = Math.max((t - s.lastTime) / 1000, 0.001);
       s.velocity = deltaX / dt;
 

@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;500;700&display=swap");
 @import "tailwindcss";
 
 /* ── Hero responsive layout ───────────────────────────────────────────
@@ -125,6 +126,10 @@
   --color-blush: #F6E9EB;
 
   /* ── Typography ───────────────────────────────────────── */
+  --font-display-serif: "Newsreader", "Noto Serif Devanagari", Georgia, serif;
+  --font-sans-grotesk: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-devanagari-serif: "Noto Serif Devanagari", serif;
+  --font-devanagari-sans: "Noto Sans Devanagari", system-ui, sans-serif;
   --font-display: var(--font-display-serif);
   --font-sans: var(--font-sans-grotesk);
 

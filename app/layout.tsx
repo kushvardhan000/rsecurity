@@ -1,44 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, Newsreader, Noto_Serif_Devanagari, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 import { SmoothScroll } from "@/src/components/SmoothScroll";
 import { Preloader } from "@/src/components/Preloader";
 import { Navbar } from "@/src/components/Navbar";
 import { Footer } from "@/src/components/Footer";
 import { SITE } from "@/src/data/site";
-
-const displaySerif = Newsreader({
-  subsets: ["latin"],
-  variable: "--font-display-serif",
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-  display: "swap",
-  fallback: ["Noto Serif Devanagari", "serif"],
-});
-
-const groteskSans = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans-grotesk",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  fallback: ["Noto Sans Devanagari", "system-ui", "sans-serif"],
-});
-
-const devanagariSerif = Noto_Serif_Devanagari({
-  subsets: ["devanagari"],
-  variable: "--font-devanagari-serif",
-  weight: ["400", "500", "700"],
-  display: "swap",
-  preload: false,
-});
-
-const devanagariSans = Noto_Sans_Devanagari({
-  subsets: ["devanagari"],
-  variable: "--font-devanagari-sans",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  preload: false,
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rsecurity.in"),
@@ -58,7 +24,7 @@ export default function RootLayout({
     <html
       lang="en"
       translate="no"
-      className={`${displaySerif.variable} ${groteskSans.variable} ${devanagariSerif.variable} ${devanagariSans.variable} antialiased`}
+      className="antialiased"
       suppressHydrationWarning
     >
       <head>

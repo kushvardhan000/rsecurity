@@ -192,7 +192,6 @@ export function Awards() {
       const vW = viewportRef.current.width;
 
       // Get or compute card dimensions
-      const cardW = cardDimensions.current.w;
       const cardH = cardDimensions.current.h;
       
       // Only recalculate config when viewport changes significantly

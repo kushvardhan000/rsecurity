@@ -430,7 +430,7 @@ export const Stats: React.FC = () => {
             <StatBox
               value={40000}
               suffix="+"
-              label="DEPLOYED"
+              label="DEPLOYMENT"
               preloaderDone={preloaderDone}
             />
           </div>
@@ -438,7 +438,7 @@ export const Stats: React.FC = () => {
             <StatBox
               value={25000}
               suffix="+"
-              label="TRAINED & CERTIFIED"
+              label="TRAINING & CERTIFICATION"
               preloaderDone={preloaderDone}
             />
           </div>

@@ -316,28 +316,28 @@ export function Hero({
           {/* Content Block */}
           <div className="relative z-10 w-full hero-block pointer-events-auto px-4 pb-3 pt-6">
             {/* Kicker (Mobile: 10.5px, bold, uppercase) */}
-            <div className="block hero-kicker-hidden text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#FF8595] leading-tight mb-1 truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+            {/* <div className="block hero-kicker-hidden text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#FF8595] leading-tight mb-1 truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
               {current.caption}
-            </div>
+            </div> */}
 
             {/* Headline H1 */}
             <h1
               className="text-white font-bold hero-h1 text-[clamp(1.15rem,6vw,1.45rem)] leading-[1.18] tracking-tight mb-2 line-clamp-3"
               style={{ fontFamily: "'Newsreader', serif" }}
             >
-              Trusted Security & Manpower Solutions {" "}
+              Trusted Security, Human Resource & Training Service Provider {" "}
               <em className="not-italic text-[#FF8595] italic font-normal">
                 Since 1995
               </em>.
             </h1>
 
             {/* Subtext (Hidden below 640px in overlay mode) */}
-            <p
+            {/* <p
               className="hidden hero-p text-[16px] leading-relaxed text-white/90 font-normal max-w-[480px]"
               style={{ fontFamily: "'Inter', sans-serif" }}
             >
               A pioneer in Jharkhand’s private security industry — an Ex-Servicemen enterprise, ISO 9001:2015 certified, and committed to quality, training, and compliance.
-            </p>
+            </p> */}
           </div>
         </div>
 

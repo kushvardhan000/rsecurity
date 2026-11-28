@@ -5,9 +5,7 @@ import Image from "next/image";
 import { ArrowUpRight, Radio, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   FEATURED_SERVICES,
-  ALSO_SERVICES,
 } from "@/src/data/services";
-import { Reveal } from "../ui/Reveal";
 import { cn } from "@/src/lib/cn";
 
 const AUTOPLAY_MS = 5000;
@@ -658,7 +656,7 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
               <span className="w-1.5 h-1.5 rounded-full bg-[#540B13] animate-ping" />
               DEPLOYMENT DIVISIONS
             </div>
-            <h2 className="text-2xl sm:text-4xl font-serif text-[#1C1917] tracking-tight">
+            <h2 className="text-2xl sm:text-5xl font-serif text-[#1C1917] tracking-tight">
               Security, built around <span className="text-[#540B13] italic">your site.</span>
             </h2>
           </div>

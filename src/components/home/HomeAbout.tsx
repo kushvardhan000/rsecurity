@@ -208,13 +208,20 @@ export function HomeAbout() {
             {...rise(0.05)}
             className="relative z-20 pr-2 xl:pr-6"
           >
-            <p className="group mb-4 inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.26em] text-[var(--color-maroon-900)]">
-              <span
-                aria-hidden="true"
-                className="h-[2px] w-9 bg-gradient-to-r from-[var(--color-accent)] to-[#C8A265] transition-all duration-500 group-hover:w-14"
-              />
-              Who We Are &bull; Est. 1995
-            </p>
+            <div className="group mb-5">
+              <p className="inline-flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.26em] text-[var(--color-maroon-900)] sm:text-[13px]">
+                <span
+                  aria-hidden="true"
+                  className="h-[2px] w-9 bg-gradient-to-r from-[var(--color-accent)] to-[#C8A265] transition-all duration-500 group-hover:w-14"
+                />
+                <span className="text-lg font-extrabold uppercase tracking-[0.26em] text-[var(--color-maroon-900)] sm:text-[13px]">
+                  Who We Are
+                </span>
+              </p>
+              <span className="mt-1.5 block pl-12 text-[10.5px] font-semibold uppercase tracking-[0.28em] text-[var(--color-accent)]">
+                Est. 1995
+              </span>
+            </div>
 
             <h2 className="font-serif text-[clamp(2.65rem,4.05vw,4.1rem)] font-medium leading-[1.06] tracking-[-0.025em] text-[var(--color-maroon-950)]">
               <span className="block transition-transform duration-300 hover:translate-x-1">
