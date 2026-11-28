@@ -1040,7 +1040,7 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
 </div>
 
         {/* ── Compact "Also" Strip ── */}
-        <Reveal delay={0.1} className="mt-8 pt-6 border-t border-neutral-200/80">
+        {/* <Reveal delay={0.1} className="mt-8 pt-6 border-t border-neutral-200/80">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-500 font-semibold mr-1">
               Also Covering:
@@ -1055,7 +1055,7 @@ const getShortestStep = (targetIndex: number, currentIndex: number) => {
               </a>
             ))}
           </div>
-        </Reveal>
+        </Reveal> */}
       </div>
     </section>
   );

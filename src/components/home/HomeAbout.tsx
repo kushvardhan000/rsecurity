@@ -311,14 +311,14 @@ export function HomeAbout() {
                 />
               </Link>
 
-              <div className="flex items-center justify-between text-left sm:block sm:border-l sm:border-[#2A060C]/15 sm:pl-4">
+              {/* <div className="flex items-center justify-between text-left sm:block sm:border-l sm:border-[#2A060C]/15 sm:pl-4">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-grey-700)]">
                   Headquarters
                 </span>
                 <span className="font-serif text-[14.5px] font-medium text-[var(--color-maroon-950)] sm:mt-0.5 sm:block">
                   Ranchi, Jharkhand
                 </span>
-              </div>
+              </div> */}
             </div>
           </motion.div>
         </div>
